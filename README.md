@@ -140,10 +140,16 @@ Shipping worldwide from day one means the strictest rule applies everywhere.
 - [x] Timeline (12-month forward view) and Exposure (spend forecast by
       month, by currency) views, with real bottom navigation — Horizon /
       Timeline / Exposure, capture as a centred FAB
+- [x] Search across title, counterparty, notes, category (SearchService,
+      reachable from Horizon); tapping a result opens it in a new edit
+      mode on ObligationFormScreen — status preserved, not forced dormant
+- [x] Biometric app lock (local_auth, on by default, fails open only when
+      the platform genuinely can't check — web preview, or no
+      biometric/passcode enrolled)
+- [x] Settings screen — currently just the lock toggle; fourth bottom-nav
+      destination now that it has real content
 - [ ] Auth — Sign in with Apple, in-app account deletion
 - [ ] Capture: email forwarding, share extension, templates
-- [ ] Search across obligations
-- [ ] Settings screen — nothing to put in it yet without auth
 - [ ] Notifications wiring, server-side scheduling
 - [ ] Delegation
 - [ ] Payments — RevenueCat, server entitlements, region-aware paywall
