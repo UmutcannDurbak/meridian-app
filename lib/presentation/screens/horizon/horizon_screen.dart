@@ -5,7 +5,6 @@ import '../../../application/obligation_providers.dart';
 import '../../../core/theme/theme.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../domain/entities/obligation.dart';
-import '../../screens/capture/capture_sheet.dart';
 import '../../screens/capture/obligation_form_screen.dart';
 import '../../widgets/obligation_row.dart';
 
@@ -14,30 +13,22 @@ import '../../widgets/obligation_row.dart';
 /// Deliberately not a calendar grid. A calendar shows every day equally,
 /// including the empty ones, which is exactly backwards for someone with 200
 /// obligations. This is a prioritised list with the dead space removed.
+///
+/// No Scaffold of its own — [AppShell] owns the single Scaffold, bottom
+/// nav, and capture FAB shared across Horizon/Timeline/Exposure.
 class HorizonScreen extends ConsumerWidget {
   const HorizonScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final tone = context.tone;
     final asyncAll = ref.watch(obligationListProvider);
 
-    return Scaffold(
-      body: SafeArea(
-        child: asyncAll.when(
-          loading: () => const _HorizonSkeleton(),
-          error: (error, stack) => const _ErrorState(
-            message: 'Could not load your obligations.',
-          ),
-          data: (_) => const _HorizonList(),
-        ),
+    return asyncAll.when(
+      loading: () => const _HorizonSkeleton(),
+      error: (error, stack) => const _ErrorState(
+        message: 'Could not load your obligations.',
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => showCaptureSheet(context),
-        backgroundColor: tone.ink,
-        foregroundColor: tone.paper,
-        child: const Icon(Icons.add),
-      ),
+      data: (_) => const _HorizonList(),
     );
   }
 }

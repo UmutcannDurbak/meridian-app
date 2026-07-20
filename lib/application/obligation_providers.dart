@@ -2,9 +2,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../data/repositories/repository_provider.dart';
 import '../domain/entities/obligation.dart';
+import '../domain/services/exposure_service.dart';
+import '../domain/services/timeline_service.dart';
 
 export '../data/repositories/repository_provider.dart'
     show obligationRepositoryProvider;
+export '../domain/services/exposure_service.dart' show MonthExposure;
+export '../domain/services/timeline_service.dart' show MonthBucket;
 
 /// Injected clock. Never call DateTime.now() outside this provider — it
 /// makes every time-dependent behaviour in this app untestable, and this app
@@ -72,4 +76,17 @@ final draftListProvider = Provider<List<Obligation>>((ref) {
   final all = ref.watch(obligationListProvider).valueOrNull ?? const [];
   return all.where((o) => o.status == ObligationStatus.draft).toList()
     ..sort((a, b) => a.expiryDate.compareTo(b.expiryDate));
+});
+
+/// 12-month forward view for the Timeline screen.
+final timelineMonthsProvider = Provider<List<MonthBucket>>((ref) {
+  final now = ref.watch(nowProvider);
+  final all = ref.watch(obligationListProvider).valueOrNull ?? const [];
+  return TimelineService.monthBuckets(all, now);
+});
+
+/// Same window as [timelineMonthsProvider], summed by currency for the
+/// Exposure screen.
+final exposureMonthsProvider = Provider<List<MonthExposure>>((ref) {
+  return ExposureService.fromBuckets(ref.watch(timelineMonthsProvider));
 });

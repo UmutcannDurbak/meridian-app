@@ -6,7 +6,7 @@ import 'package:meridian/data/local/database.dart';
 import 'package:meridian/data/repositories/obligation_repository.dart';
 import 'package:meridian/data/repositories/repository_provider_io.dart';
 import 'package:meridian/domain/entities/obligation.dart';
-import 'package:meridian/presentation/screens/horizon/horizon_screen.dart';
+import 'package:meridian/presentation/screens/app_shell.dart';
 
 import 'test_utils.dart';
 
@@ -18,7 +18,7 @@ void main() {
         overrides: [databaseProvider.overrideWithValue(db)],
         child: MaterialApp(
           theme: AppTheme.light(),
-          home: const HorizonScreen(),
+          home: const AppShell(),
         ),
       );
 

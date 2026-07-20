@@ -3,7 +3,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'core/theme/theme.dart';
-import 'presentation/screens/horizon/horizon_screen.dart';
+import 'presentation/screens/app_shell.dart';
 
 void main() {
   // obligationRepositoryProvider self-constructs its backing store on first
@@ -38,7 +38,7 @@ class MeridianApp extends StatelessWidget {
         Locale('fr'),
         Locale('es'),
       ],
-      home: const HorizonScreen(),
+      home: const AppShell(),
     );
   }
 }
