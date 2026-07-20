@@ -189,11 +189,14 @@ class _MonthBar extends StatelessWidget {
         ),
         const SizedBox(width: Space.sm),
         SizedBox(
-          width: 72,
+          width: 92,
           child: Text(
             minorUnits == 0 ? '—' : _formatMoney(minorUnits, currency),
             style: Type.numeric(tone.ink),
             textAlign: TextAlign.right,
+            maxLines: 1,
+            softWrap: false,
+            overflow: TextOverflow.ellipsis,
           ),
         ),
       ],
