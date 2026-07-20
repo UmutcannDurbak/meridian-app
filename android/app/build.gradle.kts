@@ -6,7 +6,10 @@ plugins {
 
 android {
     namespace = "com.meridian.meridian"
-    compileSdk = flutter.compileSdkVersion
+    // flutter.compileSdkVersion (34 as of Flutter 3.44.6) is behind what
+    // transitive plugin deps now require — flutter_plugin_android_lifecycle
+    // (pulled in via image_picker/file_picker) needs compileSdk >= 36.
+    compileSdk = 36
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
