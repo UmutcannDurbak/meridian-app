@@ -127,13 +127,18 @@ Shipping worldwide from day one means the strictest rule applies everywhere.
 - [x] Horizon screen
 - [x] Persistence (drift) — single source of truth via StreamProvider
 - [x] Capture: manual entry, document scan (extraction wired to the Swift
-      channel), draft review/confirm
+      channel), draft review/confirm, bulk spreadsheet import (CSV,
+      guided column mapping, never guesses an ambiguous date)
+- [x] Android and iOS platform projects (generated, real Xcode/Gradle
+      projects — not yet build-verified on a device from this environment)
+- [x] Web build for quick preview only — in-memory data, no real
+      persistence; not a target platform for the actual product
 - [ ] Offline write queue (writes already go straight to drift; sync to a
       backend doesn't exist yet, so there's nothing to queue against)
 - [ ] Encrypted attachment storage — scanned photo isn't retained, only the
       extracted fields
 - [ ] Auth — Sign in with Apple, in-app account deletion
-- [ ] Capture: email forwarding, share extension, CSV import, templates
+- [ ] Capture: email forwarding, share extension, templates
 - [ ] Timeline and Exposure views
 - [ ] Notifications wiring, server-side scheduling
 - [ ] Delegation
