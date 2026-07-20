@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 
 import '../../../core/theme/theme.dart';
 import '../../../core/theme/tokens.dart';
+import 'csv_import_screen.dart';
 import 'obligation_form_screen.dart';
 import 'scan_capture_screen.dart';
 
-/// Entry point for FR-101/102/103. Two routes only for now: manual entry and
-/// document scan. Email forwarding and bulk import are P0/P1 but need
-/// backend infrastructure this pass doesn't build — see docs/ROADMAP.md.
+/// Entry point for FR-101/102/103/105. Email forwarding needs backend
+/// infrastructure this pass doesn't build — see docs/ROADMAP.md.
 Future<void> showCaptureSheet(BuildContext context) {
   return showModalBottomSheet<void>(
     context: context,
@@ -54,6 +54,20 @@ class _CaptureSheet extends StatelessWidget {
                 Navigator.of(context).push(
                   MaterialPageRoute<void>(
                     builder: (_) => const ScanCaptureScreen(),
+                  ),
+                );
+              },
+            ),
+            const SizedBox(height: Space.sm),
+            _Option(
+              icon: Icons.table_chart_outlined,
+              title: 'Import spreadsheet',
+              subtitle: 'Bring in a CSV of contracts or renewals at once',
+              onTap: () {
+                Navigator.of(context).pop();
+                Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => const CsvImportScreen(),
                   ),
                 );
               },

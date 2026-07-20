@@ -90,6 +90,14 @@ class InMemoryObligationRepository implements ObligationRepositoryBase {
   }
 
   @override
+  Future<void> upsertAll(List<Obligation> items) async {
+    for (final o in items) {
+      _items[o.id] = o;
+    }
+    _emit();
+  }
+
+  @override
   Future<void> delete(String id) async {
     _items.remove(id);
     _emit();

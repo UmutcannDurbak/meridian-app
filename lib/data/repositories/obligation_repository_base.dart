@@ -10,6 +10,12 @@ abstract class ObligationRepositoryBase {
   Future<List<Obligation>> loadAll();
   Future<Obligation?> byId(String id);
   Future<void> upsert(Obligation o);
+
+  /// Bulk insert/update, e.g. for CSV import. Implementations should batch
+  /// this rather than looping [upsert] — a spreadsheet import can be
+  /// hundreds of rows.
+  Future<void> upsertAll(List<Obligation> items);
+
   Future<void> delete(String id);
   Future<void> resolve(String id);
   Future<void> snooze(String id, Duration by);

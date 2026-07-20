@@ -47,6 +47,19 @@ class ObligationRepository implements ObligationRepositoryBase {
         );
   }
 
+  /// Every item is a fresh insert (CSV import always mints new ids), so
+  /// unlike [upsert] there's no existing row to preserve createdAt from.
+  @override
+  Future<void> upsertAll(List<Obligation> items) async {
+    final now = DateTime.now();
+    await _db.batch((batch) {
+      batch.insertAllOnConflictUpdate(
+        _db.obligationRows,
+        items.map((o) => _toCompanion(o, createdAt: now, updatedAt: now)),
+      );
+    });
+  }
+
   @override
   Future<void> delete(String id) async {
     await (_db.delete(_db.obligationRows)..where((t) => t.id.equals(id)))

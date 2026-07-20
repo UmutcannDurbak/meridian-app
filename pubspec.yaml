@@ -36,6 +36,7 @@ dependencies:
   # Capture
   image_picker: ^1.1.2
   file_picker: ^8.1.2
+  csv: ^6.0.0
 
   # Payments — RevenueCat over raw StoreKit for server-side receipt
   # validation and entitlement management.

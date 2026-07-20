@@ -135,4 +135,25 @@ void main() {
     await repo.delete('e1');
     expect(await repo.byId('e1'), isNull);
   });
+
+  test('upsertAll inserts a batch in one call', () async {
+    await repo.upsertAll([
+      Obligation(
+        id: 'f1',
+        title: 'Row one',
+        category: ObligationCategory.contract,
+        expiryDate: DateTime(2026, 1, 1),
+      ),
+      Obligation(
+        id: 'f2',
+        title: 'Row two',
+        category: ObligationCategory.subscription,
+        expiryDate: DateTime(2026, 2, 1),
+      ),
+    ]);
+
+    final all = await repo.loadAll();
+    expect(all.map((o) => o.id), containsAll(['f1', 'f2']));
+    expect(all.firstWhere((o) => o.id == 'f2').title, 'Row two');
+  });
 }
