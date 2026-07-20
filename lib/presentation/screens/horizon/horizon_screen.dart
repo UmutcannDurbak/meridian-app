@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -8,6 +9,7 @@ import '../../../domain/entities/obligation.dart';
 import '../../screens/capture/obligation_form_screen.dart';
 import '../../screens/search/search_screen.dart';
 import '../../widgets/obligation_row.dart';
+import '../../widgets/pressable.dart';
 
 /// The home screen, and the answer to one question: what needs me now?
 ///
@@ -63,7 +65,7 @@ class _HorizonList extends ConsumerWidget {
               children: [
                 Text('Horizon', style: Type.display(tone.ink)),
                 IconButton(
-                  icon: Icon(Icons.search, color: tone.inkMuted),
+                  icon: Icon(CupertinoIcons.search, color: tone.inkMuted),
                   tooltip: 'Search',
                   onPressed: () => Navigator.of(context).push(
                     MaterialPageRoute<void>(
@@ -111,18 +113,21 @@ class _HorizonList extends ConsumerWidget {
               ),
             ),
           ),
-          SliverList.separated(
-            itemCount: group.items.length,
-            separatorBuilder: (_, __) => Divider(color: tone.hairline, height: 1),
-            itemBuilder: (context, i) {
-              final o = group.items[i];
-              return ObligationRow(
-                obligation: o,
-                now: now,
-                onResolve: () => repo.resolve(o.id),
-                onSnooze: () => repo.snooze(o.id, const Duration(days: 7)),
-              );
-            },
+          SliverPadding(
+            padding: const EdgeInsets.symmetric(horizontal: Space.md),
+            sliver: SliverList.separated(
+              itemCount: group.items.length,
+              separatorBuilder: (_, __) => const SizedBox(height: Space.sm),
+              itemBuilder: (context, i) {
+                final o = group.items[i];
+                return ObligationRow(
+                  obligation: o,
+                  now: now,
+                  onResolve: () => repo.resolve(o.id),
+                  onSnooze: () => repo.snooze(o.id, const Duration(days: 7)),
+                );
+              },
+            ),
           ),
         ],
         const SliverToBoxAdapter(child: SizedBox(height: Space.huge)),
@@ -142,8 +147,7 @@ class _DraftBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tone = context.tone;
-    return InkWell(
-      borderRadius: BorderRadius.circular(Radii.md),
+    return Pressable(
       onTap: () => Navigator.of(context).push(
         MaterialPageRoute<void>(
           builder: (_) => ObligationFormScreen(draft: first),
@@ -158,7 +162,20 @@ class _DraftBanner extends StatelessWidget {
         ),
         child: Row(
           children: [
-            Icon(Icons.description_outlined, size: 18, color: tone.inkMuted),
+            Container(
+              width: 32,
+              height: 32,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: tone.paper,
+                borderRadius: BorderRadius.circular(Radii.sm),
+              ),
+              child: Icon(
+                CupertinoIcons.doc_text,
+                size: 16,
+                color: tone.inkMuted,
+              ),
+            ),
             const SizedBox(width: Space.sm),
             Expanded(
               child: Text(
@@ -168,7 +185,7 @@ class _DraftBanner extends StatelessWidget {
                 style: Type.label(tone.ink),
               ),
             ),
-            Icon(Icons.chevron_right, size: 18, color: tone.inkFaint),
+            Icon(CupertinoIcons.chevron_right, size: 16, color: tone.inkFaint),
           ],
         ),
       ),
@@ -244,6 +261,22 @@ class _Empty extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            Container(
+              width: 64,
+              height: 64,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: tone.surface,
+                shape: BoxShape.circle,
+                border: Border.all(color: tone.hairline),
+              ),
+              child: Icon(
+                CupertinoIcons.checkmark_seal,
+                size: 28,
+                color: tone.inkFaint,
+              ),
+            ),
+            const SizedBox(height: Space.lg),
             Text(
               'Nothing is waiting on you.',
               style: Type.title(tone.ink),

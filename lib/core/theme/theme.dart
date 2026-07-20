@@ -209,11 +209,44 @@ abstract final class AppTheme {
       borderRadius: BorderRadius.circular(Radii.md),
     );
 
+    // Every Material widget that doesn't take an explicit style argument —
+    // SwitchListTile's title, a DropdownMenuItem's label, a Dialog's content,
+    // the date picker's headline — falls back to this. Leaving it unset
+    // means those widgets quietly render in Roboto/onSurface-black87 next to
+    // hand-styled Inter/Newsreader text, which is precisely the seam that
+    // makes a screen read as unfinished. There is no text in this app that
+    // is allowed to bypass Type.
+    final textTheme = TextTheme(
+      displayLarge: Type.display(t.ink),
+      displayMedium: Type.title(t.ink),
+      displaySmall: Type.title(t.ink),
+      headlineLarge: Type.title(t.ink),
+      headlineMedium: Type.title(t.ink),
+      headlineSmall: Type.heading(t.ink),
+      titleLarge: Type.title(t.ink),
+      titleMedium: Type.heading(t.ink),
+      titleSmall: Type.label(t.ink),
+      bodyLarge: Type.body(t.ink),
+      bodyMedium: Type.body(t.ink),
+      bodySmall: Type.label(t.inkMuted),
+      labelLarge: Type.heading(t.ink),
+      labelMedium: Type.label(t.inkMuted),
+      labelSmall: Type.eyebrow(t.inkMuted),
+    );
+
+    // A soft, low-opacity ink shadow rather than Material's default black —
+    // used only where something genuinely floats above the page (a sheet, a
+    // dialog, the date picker). Flat content on the page itself keeps the
+    // no-shadow rule; this is a depth cue for an overlay, not a button.
+    final overlayShadowColor = t.ink.withValues(alpha: 0.18);
+
     return ThemeData(
       useMaterial3: true,
       brightness: b,
       scaffoldBackgroundColor: t.paper,
       colorScheme: scheme,
+      textTheme: textTheme,
+      primaryTextTheme: textTheme,
       extensions: [t],
       splashFactory: NoSplash.splashFactory,
       highlightColor: Colors.transparent,
@@ -375,6 +408,128 @@ abstract final class AppTheme {
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(Radii.sm),
+        ),
+      ),
+
+      // A modal sheet is the app's most-used overlay — every capture flow
+      // starts here. Default Material gives it a bare white rectangle and a
+      // grey pill; this gives it the same ink/paper vocabulary as the rest
+      // of the app, a handle that reads as ink rather than disabled-grey,
+      // and a soft shadow because this is the one place something is
+      // genuinely floating above the page.
+      bottomSheetTheme: BottomSheetThemeData(
+        backgroundColor: t.paper,
+        modalBackgroundColor: t.paper,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        modalElevation: 0,
+        shadowColor: overlayShadowColor,
+        dragHandleColor: t.hairline,
+        dragHandleSize: const Size(36, 4),
+        clipBehavior: Clip.antiAlias,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(Radii.lg)),
+        ),
+      ),
+
+      dialogTheme: DialogThemeData(
+        backgroundColor: t.paper,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        shadowColor: overlayShadowColor,
+        titleTextStyle: Type.title(t.ink),
+        contentTextStyle: Type.body(t.inkMuted),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(Radii.lg),
+        ),
+      ),
+
+      // The date picker matters more here than in almost any other app —
+      // the one thing every obligation needs is a date. Left un-themed it is
+      // the single bluest, most stock-Android surface in the product.
+      datePickerTheme: DatePickerThemeData(
+        backgroundColor: t.paper,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        shadowColor: overlayShadowColor,
+        headerBackgroundColor: t.ink,
+        headerForegroundColor: t.paper,
+        headerHeadlineStyle: Type.title(t.paper),
+        headerHelpStyle: Type.eyebrow(t.paper.withValues(alpha: 0.7)),
+        weekdayStyle: Type.eyebrow(t.inkMuted),
+        dayStyle: Type.numeric(t.ink),
+        dayForegroundColor: WidgetStateProperty.resolveWith(
+          (states) =>
+              states.contains(WidgetState.selected) ? t.paper : t.ink,
+        ),
+        dayBackgroundColor: WidgetStateProperty.resolveWith(
+          (states) => states.contains(WidgetState.selected)
+              ? t.ink
+              : Colors.transparent,
+        ),
+        dayOverlayColor: WidgetStateProperty.all(Colors.transparent),
+        todayForegroundColor: WidgetStateProperty.all(t.ink),
+        todayBackgroundColor: WidgetStateProperty.all(Colors.transparent),
+        todayBorder: BorderSide(color: t.ink, width: 1),
+        yearStyle: Type.body(t.ink),
+        yearForegroundColor: WidgetStateProperty.resolveWith(
+          (states) =>
+              states.contains(WidgetState.selected) ? t.paper : t.ink,
+        ),
+        yearBackgroundColor: WidgetStateProperty.resolveWith(
+          (states) => states.contains(WidgetState.selected)
+              ? t.ink
+              : Colors.transparent,
+        ),
+        rangePickerBackgroundColor: t.paper,
+        rangePickerHeaderBackgroundColor: t.ink,
+        rangePickerHeaderForegroundColor: t.paper,
+        dividerColor: t.hairline,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(Radii.lg),
+        ),
+        cancelButtonStyle: TextButton.styleFrom(
+          foregroundColor: t.inkMuted,
+          textStyle: Type.label(t.inkMuted),
+        ),
+        confirmButtonStyle: TextButton.styleFrom(
+          foregroundColor: t.ink,
+          textStyle: Type.heading(t.ink),
+        ),
+      ),
+
+      popupMenuTheme: PopupMenuThemeData(
+        color: t.paper,
+        surfaceTintColor: Colors.transparent,
+        elevation: 4,
+        shadowColor: overlayShadowColor,
+        textStyle: Type.body(t.ink),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(Radii.md),
+          side: BorderSide(color: t.hairline),
+        ),
+      ),
+
+      tooltipTheme: TooltipThemeData(
+        decoration: BoxDecoration(
+          color: t.ink,
+          borderRadius: BorderRadius.circular(Radii.sm),
+        ),
+        textStyle: Type.label(t.paper),
+        padding: const EdgeInsets.symmetric(
+          horizontal: Space.sm,
+          vertical: Space.xs,
+        ),
+      ),
+
+      cardTheme: CardThemeData(
+        color: t.surface,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        margin: EdgeInsets.zero,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(Radii.md),
+          side: BorderSide(color: t.hairline),
         ),
       ),
     );

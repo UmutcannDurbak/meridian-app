@@ -75,19 +75,22 @@ class TimelineScreen extends ConsumerWidget {
               ),
             )
           else
-            SliverList.separated(
-              itemCount: bucket.items.length,
-              separatorBuilder: (_, __) =>
-                  Divider(color: tone.hairline, height: 1),
-              itemBuilder: (context, i) {
-                final o = bucket.items[i];
-                return ObligationRow(
-                  obligation: o,
-                  now: now,
-                  onResolve: () => repo.resolve(o.id),
-                  onSnooze: () => repo.snooze(o.id, const Duration(days: 7)),
-                );
-              },
+            SliverPadding(
+              padding: const EdgeInsets.symmetric(horizontal: Space.md),
+              sliver: SliverList.separated(
+                itemCount: bucket.items.length,
+                separatorBuilder: (_, __) => const SizedBox(height: Space.sm),
+                itemBuilder: (context, i) {
+                  final o = bucket.items[i];
+                  return ObligationRow(
+                    obligation: o,
+                    now: now,
+                    onResolve: () => repo.resolve(o.id),
+                    onSnooze: () =>
+                        repo.snooze(o.id, const Duration(days: 7)),
+                  );
+                },
+              ),
             ),
         ],
         const SliverToBoxAdapter(child: SizedBox(height: Space.huge)),

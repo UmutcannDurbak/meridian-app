@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -7,6 +8,7 @@ import '../../../application/obligation_providers.dart';
 import '../../../core/theme/theme.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../domain/entities/obligation.dart';
+import '../../widgets/pressable.dart';
 
 /// Manual entry, draft review, and editing an existing obligation (e.g. from
 /// search) share this screen — the only difference is what pre-fills the
@@ -191,13 +193,17 @@ class _ObligationFormScreenState extends ConsumerState<ObligationFormScreen> {
                 textInputAction: TextInputAction.next,
               ),
               const SizedBox(height: Space.md),
-              InkWell(
+              Pressable(
                 onTap: _pickDate,
-                borderRadius: BorderRadius.circular(Radii.sm),
                 child: InputDecorator(
                   decoration: InputDecoration(
                     labelText: 'Expiry date',
                     errorText: _dateError,
+                    suffixIcon: Icon(
+                      CupertinoIcons.calendar,
+                      size: 18,
+                      color: tone.inkMuted,
+                    ),
                   ),
                   child: Text(
                     _expiryDate == null
@@ -309,7 +315,7 @@ class _DisclosureBanner extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(Icons.lock_outline, size: 16, color: tone.inkMuted),
+          Icon(CupertinoIcons.lock, size: 16, color: tone.inkMuted),
           const SizedBox(width: Space.sm),
           Expanded(child: Text(text, style: Type.label(tone.inkMuted))),
         ],
@@ -335,7 +341,7 @@ class _MoreDetails extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        InkWell(
+        Pressable(
           onTap: onToggle,
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: Space.sm),
@@ -344,8 +350,8 @@ class _MoreDetails extends StatelessWidget {
                 Text('More details', style: Type.label(tone.inkMuted)),
                 const SizedBox(width: Space.xxs),
                 Icon(
-                  expanded ? Icons.expand_less : Icons.expand_more,
-                  size: 18,
+                  expanded ? CupertinoIcons.chevron_up : CupertinoIcons.chevron_down,
+                  size: 14,
                   color: tone.inkMuted,
                 ),
               ],

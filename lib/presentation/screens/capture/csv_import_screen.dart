@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:csv/csv.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
@@ -250,7 +251,7 @@ class _PickFileStep extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.table_chart_outlined, size: 48, color: tone.inkFaint),
+            Icon(CupertinoIcons.table, size: 48, color: tone.inkFaint),
             const SizedBox(height: Space.lg),
             Text(
               'Already keep a spreadsheet of contracts, renewals, or '
@@ -275,7 +276,7 @@ class _PickFileStep extends StatelessWidget {
             ],
             FilledButton.icon(
               onPressed: picking ? null : onPick,
-              icon: const Icon(Icons.upload_file_outlined),
+              icon: const Icon(CupertinoIcons.cloud_upload),
               label: Text(picking ? 'Reading…' : 'Choose a CSV file'),
             ),
           ],
@@ -478,7 +479,9 @@ class _PreviewStep extends StatelessWidget {
               return ListTile(
                 contentPadding: EdgeInsets.zero,
                 leading: Icon(
-                  r.isValid ? Icons.check_circle_outline : Icons.error_outline,
+                  r.isValid
+                      ? CupertinoIcons.checkmark_circle
+                      : CupertinoIcons.exclamationmark_circle,
                   color: r.isValid ? tone.inkMuted : Pressure.closing,
                   size: 20,
                 ),

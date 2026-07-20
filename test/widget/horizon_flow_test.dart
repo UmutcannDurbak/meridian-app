@@ -64,7 +64,7 @@ void main() {
     await tester.pumpWidget(wrap(db));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byType(FloatingActionButton));
+    await tester.tap(find.byKey(const Key('captureButton')));
     await tester.pumpAndSettle();
     expect(find.text('Enter manually'), findsOneWidget);
 

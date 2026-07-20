@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 
@@ -6,6 +6,7 @@ import '../../core/theme/theme.dart';
 import '../../core/theme/tokens.dart';
 import '../../domain/entities/obligation.dart';
 import 'action_window_bar.dart';
+import 'pressable.dart';
 
 /// A single line in the Horizon.
 ///
@@ -38,8 +39,26 @@ class ObligationRow extends StatelessWidget {
 
     return Dismissible(
       key: ValueKey(o.id),
-      background: _swipeBg(context, Alignment.centerLeft, 'Resolve'),
-      secondaryBackground: _swipeBg(context, Alignment.centerRight, 'Snooze'),
+      background: ClipRRect(
+        borderRadius: BorderRadius.circular(Radii.md),
+        child: _swipeBg(
+          context,
+          Alignment.centerLeft,
+          CupertinoIcons.checkmark_alt,
+          'Resolve',
+          filled: true,
+        ),
+      ),
+      secondaryBackground: ClipRRect(
+        borderRadius: BorderRadius.circular(Radii.md),
+        child: _swipeBg(
+          context,
+          Alignment.centerRight,
+          CupertinoIcons.clock,
+          'Snooze',
+          filled: false,
+        ),
+      ),
       confirmDismiss: (dir) async {
         HapticFeedback.mediumImpact();
         if (dir == DismissDirection.startToEnd) {
@@ -49,12 +68,14 @@ class ObligationRow extends StatelessWidget {
         }
         return false; // parent controls removal after state update
       },
-      child: InkWell(
+      child: Pressable(
         onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: Space.md,
-            vertical: Space.md,
+        child: Container(
+          padding: const EdgeInsets.all(Space.md),
+          decoration: BoxDecoration(
+            color: tone.surface,
+            borderRadius: BorderRadius.circular(Radii.md),
+            border: Border.all(color: tone.hairline),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -62,6 +83,21 @@ class ObligationRow extends StatelessWidget {
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  Container(
+                    width: 36,
+                    height: 36,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: tone.paper,
+                      borderRadius: BorderRadius.circular(Radii.sm),
+                    ),
+                    child: Icon(
+                      _categoryIcon(o.category),
+                      size: 17,
+                      color: tone.inkMuted,
+                    ),
+                  ),
+                  const SizedBox(width: Space.sm),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -98,7 +134,7 @@ class ObligationRow extends StatelessWidget {
                   ),
                 ],
               ),
-              const SizedBox(height: Space.sm),
+              const SizedBox(height: Space.md),
               ActionWindowBar(
                 pressure: pressure,
                 windowStartFraction: o.noticeDays > 0 ? 0.35 : 0.0,
@@ -125,6 +161,21 @@ class ObligationRow extends StatelessWidget {
     );
   }
 
+  static IconData _categoryIcon(ObligationCategory c) => switch (c) {
+        ObligationCategory.contract => CupertinoIcons.doc_text,
+        ObligationCategory.subscription => CupertinoIcons.arrow_2_circlepath,
+        ObligationCategory.payment => CupertinoIcons.money_dollar,
+        ObligationCategory.insurance => CupertinoIcons.shield,
+        ObligationCategory.licence => CupertinoIcons.rosette,
+        ObligationCategory.certification => CupertinoIcons.checkmark_seal,
+        ObligationCategory.maintenance => CupertinoIcons.wrench,
+        ObligationCategory.tax => CupertinoIcons.percent,
+        ObligationCategory.warranty => CupertinoIcons.shield_lefthalf_fill,
+        ObligationCategory.document => CupertinoIcons.doc,
+        ObligationCategory.commitment => CupertinoIcons.person_2,
+        ObligationCategory.other => CupertinoIcons.ellipsis_circle,
+      };
+
   static String _dayLabel(int days) {
     if (days < 0) return '${-days}d over';
     if (days == 0) return 'Today';
@@ -146,13 +197,30 @@ class ObligationRow extends StatelessWidget {
     );
   }
 
-  Widget _swipeBg(BuildContext context, Alignment a, String label) {
+  Widget _swipeBg(
+    BuildContext context,
+    Alignment a,
+    IconData icon,
+    String label, {
+    required bool filled,
+  }) {
     final tone = context.tone;
+    final fg = filled ? tone.paper : tone.ink;
+    final iconAndLabel = [
+      Icon(icon, size: 16, color: fg),
+      const SizedBox(width: Space.xs),
+      Text(label, style: Type.eyebrow(fg)),
+    ];
     return Container(
       alignment: a,
       padding: const EdgeInsets.symmetric(horizontal: Space.lg),
-      color: tone.surface,
-      child: Text(label, style: Type.eyebrow(tone.inkMuted)),
+      color: filled ? tone.ink : tone.surface,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: a == Alignment.centerRight
+            ? iconAndLabel.reversed.toList()
+            : iconAndLabel,
+      ),
     );
   }
 }

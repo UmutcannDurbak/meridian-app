@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
@@ -214,6 +214,22 @@ class _Empty extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            Container(
+              width: 64,
+              height: 64,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: tone.surface,
+                shape: BoxShape.circle,
+                border: Border.all(color: tone.hairline),
+              ),
+              child: Icon(
+                CupertinoIcons.chart_bar_square,
+                size: 28,
+                color: tone.inkFaint,
+              ),
+            ),
+            const SizedBox(height: Space.lg),
             Text(
               'Nothing with a value on the horizon.',
               style: Type.title(tone.ink),

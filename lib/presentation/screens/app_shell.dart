@@ -1,7 +1,9 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 import '../../core/theme/theme.dart';
 import '../../core/theme/tokens.dart';
+import '../widgets/pressable.dart';
 import 'capture/capture_sheet.dart';
 import 'exposure/exposure_screen.dart';
 import 'horizon/horizon_screen.dart';
@@ -36,11 +38,9 @@ class _AppShellState extends State<AppShell> {
       body: SafeArea(
         child: IndexedStack(index: _index, children: _screens),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => showCaptureSheet(context),
-        backgroundColor: tone.ink,
-        foregroundColor: tone.paper,
-        child: const Icon(Icons.add),
+      floatingActionButton: _CaptureButton(
+        key: const Key('captureButton'),
+        onTap: () => showCaptureSheet(context),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       bottomNavigationBar: BottomAppBar(
@@ -51,32 +51,60 @@ class _AppShellState extends State<AppShell> {
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
             _NavButton(
-              icon: Icons.view_agenda_outlined,
+              icon: CupertinoIcons.list_bullet,
               label: 'Horizon',
               selected: _index == 0,
               onTap: () => setState(() => _index = 0),
             ),
             _NavButton(
-              icon: Icons.timeline_outlined,
+              icon: CupertinoIcons.calendar,
               label: 'Timeline',
               selected: _index == 1,
               onTap: () => setState(() => _index = 1),
             ),
             const SizedBox(width: Space.xxl),
             _NavButton(
-              icon: Icons.insights_outlined,
+              icon: CupertinoIcons.chart_bar_square,
               label: 'Exposure',
               selected: _index == 2,
               onTap: () => setState(() => _index = 2),
             ),
             _NavButton(
-              icon: Icons.settings_outlined,
+              icon: CupertinoIcons.gear_alt,
               label: 'Settings',
               selected: _index == 3,
               onTap: () => setState(() => _index = 3),
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// Not a stock FloatingActionButton — that widget's press feedback is an
+/// InkWell splash, which this theme disables app-wide and never replaces.
+/// Rebuilding it on Pressable gives capture, the app's single most important
+/// tap target, the same real press feedback as everything else.
+class _CaptureButton extends StatelessWidget {
+  const _CaptureButton({super.key, required this.onTap});
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final tone = context.tone;
+    return Pressable(
+      onTap: onTap,
+      scale: 0.92,
+      child: Container(
+        width: 56,
+        height: 56,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: tone.ink,
+          borderRadius: BorderRadius.circular(Radii.lg),
+        ),
+        child: Icon(CupertinoIcons.add, color: tone.paper, size: 26),
       ),
     );
   }
@@ -99,9 +127,8 @@ class _NavButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final tone = context.tone;
     final color = selected ? tone.ink : tone.inkFaint;
-    return InkWell(
+    return Pressable(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(Radii.md),
       child: Padding(
         padding: const EdgeInsets.symmetric(
           horizontal: Space.sm,

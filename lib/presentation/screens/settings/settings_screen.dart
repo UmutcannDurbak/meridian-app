@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -49,25 +50,97 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         const SizedBox(height: Space.xl),
         Text('SECURITY', style: Type.eyebrow(tone.inkMuted)),
         const SizedBox(height: Space.sm),
-        SwitchListTile.adaptive(
-          contentPadding: EdgeInsets.zero,
-          title: const Text('Require Face ID / biometric unlock'),
-          subtitle: const Text(
-            'Recommended — this app holds contracts and financial details.',
+        Container(
+          padding: const EdgeInsets.all(Space.md),
+          decoration: BoxDecoration(
+            color: tone.surface,
+            borderRadius: BorderRadius.circular(Radii.md),
+            border: Border.all(color: tone.hairline),
           ),
-          value: _lockEnabled ?? true,
-          onChanged: _lockEnabled == null ? null : _setLockEnabled,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 36,
+                height: 36,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: tone.paper,
+                  borderRadius: BorderRadius.circular(Radii.sm),
+                ),
+                child: Icon(
+                  CupertinoIcons.lock_shield,
+                  size: 18,
+                  color: tone.inkMuted,
+                ),
+              ),
+              const SizedBox(width: Space.sm),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Require Face ID / biometric unlock',
+                      style: Type.heading(tone.ink),
+                    ),
+                    const SizedBox(height: Space.xxs),
+                    Text(
+                      'Recommended — this app holds contracts and financial '
+                      'details.',
+                      style: Type.label(tone.inkMuted),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: Space.sm),
+              Switch.adaptive(
+                value: _lockEnabled ?? true,
+                onChanged: _lockEnabled == null ? null : _setLockEnabled,
+              ),
+            ],
+          ),
         ),
         const SizedBox(height: Space.xl),
         Text('ABOUT', style: Type.eyebrow(tone.inkMuted)),
         const SizedBox(height: Space.sm),
-        Text('Meridian', style: Type.heading(tone.ink)),
-        const SizedBox(height: Space.xxs),
-        Text(
-          // Keep in sync with pubspec.yaml's version field by hand — not
-          // worth a package_info_plus dependency for one line of text.
-          'Version 0.1.0 — early scaffold, not yet released.',
-          style: Type.label(tone.inkMuted),
+        Container(
+          padding: const EdgeInsets.all(Space.md),
+          decoration: BoxDecoration(
+            color: tone.surface,
+            borderRadius: BorderRadius.circular(Radii.md),
+            border: Border.all(color: tone.hairline),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 36,
+                height: 36,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: tone.paper,
+                  borderRadius: BorderRadius.circular(Radii.sm),
+                ),
+                child: Text('M', style: Type.title(tone.ink)),
+              ),
+              const SizedBox(width: Space.sm),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Meridian', style: Type.heading(tone.ink)),
+                    const SizedBox(height: Space.xxs),
+                    Text(
+                      // Keep in sync with pubspec.yaml's version field by
+                      // hand — not worth a package_info_plus dependency for
+                      // one line of text.
+                      'Version 0.1.0 — early scaffold, not yet released.',
+                      style: Type.label(tone.inkMuted),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ],
     );

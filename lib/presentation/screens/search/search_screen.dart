@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -51,7 +52,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
         actions: [
           if (_query.isNotEmpty)
             IconButton(
-              icon: const Icon(Icons.close),
+              icon: const Icon(CupertinoIcons.clear),
               onPressed: () => setState(() {
                 _controller.clear();
                 _query = '';
@@ -65,9 +66,9 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
             : results.isEmpty
                 ? _NoResults(tone: tone, query: _query)
                 : ListView.separated(
+                    padding: const EdgeInsets.all(Space.md),
                     itemCount: results.length,
-                    separatorBuilder: (_, __) =>
-                        Divider(color: tone.hairline, height: 1),
+                    separatorBuilder: (_, __) => const SizedBox(height: Space.sm),
                     itemBuilder: (context, i) {
                       final o = results[i];
                       return ObligationRow(
@@ -98,10 +99,17 @@ class _Prompt extends StatelessWidget {
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(Space.xl),
-        child: Text(
-          'Search by title, counterparty, notes, or category.',
-          style: Type.body(tone.inkMuted),
-          textAlign: TextAlign.center,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(CupertinoIcons.search, size: 32, color: tone.inkFaint),
+            const SizedBox(height: Space.md),
+            Text(
+              'Search by title, counterparty, notes, or category.',
+              style: Type.body(tone.inkMuted),
+              textAlign: TextAlign.center,
+            ),
+          ],
         ),
       ),
     );
@@ -118,10 +126,21 @@ class _NoResults extends StatelessWidget {
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(Space.xl),
-        child: Text(
-          'Nothing matches "$query".',
-          style: Type.body(tone.inkMuted),
-          textAlign: TextAlign.center,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              CupertinoIcons.doc_text_search,
+              size: 32,
+              color: tone.inkFaint,
+            ),
+            const SizedBox(height: Space.md),
+            Text(
+              'Nothing matches "$query".',
+              style: Type.body(tone.inkMuted),
+              textAlign: TextAlign.center,
+            ),
+          ],
         ),
       ),
     );

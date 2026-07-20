@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
@@ -99,7 +100,7 @@ class _ScanCaptureScreenState extends ConsumerState<ScanCaptureScreen> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(
-                Icons.document_scanner_outlined,
+                CupertinoIcons.doc_text_viewfinder,
                 size: 48,
                 color: tone.inkFaint,
               ),
@@ -121,7 +122,7 @@ class _ScanCaptureScreenState extends ConsumerState<ScanCaptureScreen> {
               FilledButton.icon(
                 onPressed:
                     _working ? null : () => _pickAndExtract(ImageSource.camera),
-                icon: const Icon(Icons.camera_alt_outlined),
+                icon: const Icon(CupertinoIcons.camera),
                 label: Text(_working ? 'Reading…' : 'Take photo'),
               ),
               const SizedBox(height: Space.sm),
@@ -129,7 +130,7 @@ class _ScanCaptureScreenState extends ConsumerState<ScanCaptureScreen> {
                 onPressed: _working
                     ? null
                     : () => _pickAndExtract(ImageSource.gallery),
-                icon: const Icon(Icons.photo_library_outlined),
+                icon: const Icon(CupertinoIcons.photo_on_rectangle),
                 label: const Text('Choose from library'),
               ),
             ],

@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:local_auth/local_auth.dart';
@@ -143,7 +144,21 @@ class _LockScreen extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.lock_outline, size: 40, color: tone.inkMuted),
+                Container(
+                  width: 72,
+                  height: 72,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: tone.surface,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: tone.hairline),
+                  ),
+                  child: Icon(
+                    CupertinoIcons.lock_fill,
+                    size: 30,
+                    color: tone.ink,
+                  ),
+                ),
                 const SizedBox(height: Space.lg),
                 Text('Meridian is locked', style: Type.title(tone.ink)),
                 const SizedBox(height: Space.sm),

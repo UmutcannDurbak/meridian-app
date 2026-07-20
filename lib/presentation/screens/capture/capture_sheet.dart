@@ -1,7 +1,9 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 import '../../../core/theme/theme.dart';
 import '../../../core/theme/tokens.dart';
+import '../../widgets/pressable.dart';
 import 'csv_import_screen.dart';
 import 'obligation_form_screen.dart';
 import 'scan_capture_screen.dart';
@@ -12,6 +14,7 @@ Future<void> showCaptureSheet(BuildContext context) {
   return showModalBottomSheet<void>(
     context: context,
     showDragHandle: true,
+    isScrollControlled: true,
     builder: (context) => const _CaptureSheet(),
   );
 }
@@ -22,8 +25,11 @@ class _CaptureSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tone = context.tone;
+    // isScrollControlled lets the sheet size to its content up to full
+    // screen height; wrapping in a scroll view is the fallback for the rest
+    // — a small device or a landscape keyboard should scroll, never overflow.
     return SafeArea(
-      child: Padding(
+      child: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(Space.md, 0, Space.md, Space.lg),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -32,7 +38,7 @@ class _CaptureSheet extends StatelessWidget {
             Text('Add an obligation', style: Type.title(tone.ink)),
             const SizedBox(height: Space.md),
             _Option(
-              icon: Icons.edit_outlined,
+              icon: CupertinoIcons.pencil,
               title: 'Enter manually',
               subtitle: 'Title and date — everything else is optional',
               onTap: () {
@@ -44,9 +50,9 @@ class _CaptureSheet extends StatelessWidget {
                 );
               },
             ),
-            const SizedBox(height: Space.sm),
+            Divider(color: tone.hairline, height: Space.lg),
             _Option(
-              icon: Icons.document_scanner_outlined,
+              icon: CupertinoIcons.doc_text_viewfinder,
               title: 'Scan a document',
               subtitle: 'Read on this device. Nothing is uploaded.',
               onTap: () {
@@ -58,9 +64,9 @@ class _CaptureSheet extends StatelessWidget {
                 );
               },
             ),
-            const SizedBox(height: Space.sm),
+            Divider(color: tone.hairline, height: Space.lg),
             _Option(
-              icon: Icons.table_chart_outlined,
+              icon: CupertinoIcons.table,
               title: 'Import spreadsheet',
               subtitle: 'Bring in a CSV of contracts or renewals at once',
               onTap: () {
@@ -95,24 +101,34 @@ class _Option extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tone = context.tone;
-    return InkWell(
+    return Pressable(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(Radii.md),
       child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: Space.sm),
+        padding: const EdgeInsets.symmetric(vertical: Space.xs),
         child: Row(
           children: [
-            Icon(icon, color: tone.ink),
+            Container(
+              width: 40,
+              height: 40,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: tone.surface,
+                borderRadius: BorderRadius.circular(Radii.md),
+              ),
+              child: Icon(icon, color: tone.ink, size: 20),
+            ),
             const SizedBox(width: Space.md),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(title, style: Type.heading(tone.ink)),
+                  const SizedBox(height: Space.xxs),
                   Text(subtitle, style: Type.label(tone.inkMuted)),
                 ],
               ),
             ),
+            Icon(CupertinoIcons.chevron_right, size: 16, color: tone.inkFaint),
           ],
         ),
       ),
