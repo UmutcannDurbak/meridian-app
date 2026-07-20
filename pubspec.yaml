@@ -30,6 +30,9 @@ dependencies:
   path_provider: ^2.1.4
   path: ^1.9.0
 
+  # Security — Face ID / fingerprint app lock (FR-603).
+  local_auth: ^2.3.0
+
   # Network
   dio: ^5.6.0
 

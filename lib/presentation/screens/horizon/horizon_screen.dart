@@ -6,6 +6,7 @@ import '../../../core/theme/theme.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../domain/entities/obligation.dart';
 import '../../screens/capture/obligation_form_screen.dart';
+import '../../screens/search/search_screen.dart';
 import '../../widgets/obligation_row.dart';
 
 /// The home screen, and the answer to one question: what needs me now?
@@ -57,7 +58,21 @@ class _HorizonList extends ConsumerWidget {
             Space.sm,
           ),
           sliver: SliverToBoxAdapter(
-            child: Text('Horizon', style: Type.display(tone.ink)),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text('Horizon', style: Type.display(tone.ink)),
+                IconButton(
+                  icon: Icon(Icons.search, color: tone.inkMuted),
+                  tooltip: 'Search',
+                  onPressed: () => Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => const SearchScreen(),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
         if (drafts.isNotEmpty)

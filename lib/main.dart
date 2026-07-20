@@ -3,6 +3,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'core/theme/theme.dart';
+import 'presentation/screens/app_lock_gate.dart';
 import 'presentation/screens/app_shell.dart';
 
 void main() {
@@ -38,7 +39,7 @@ class MeridianApp extends StatelessWidget {
         Locale('fr'),
         Locale('es'),
       ],
-      home: const AppShell(),
+      home: const AppLockGate(child: AppShell()),
     );
   }
 }

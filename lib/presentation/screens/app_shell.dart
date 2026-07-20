@@ -5,15 +5,13 @@ import '../../core/theme/tokens.dart';
 import 'capture/capture_sheet.dart';
 import 'exposure/exposure_screen.dart';
 import 'horizon/horizon_screen.dart';
+import 'settings/settings_screen.dart';
 import 'timeline/timeline_screen.dart';
 
-/// Hosts the three peer destinations from the screen inventory — Horizon,
-/// Timeline, Exposure — plus capture as a centred, prominent action rather
-/// than a fourth tab, per the SRS: "Capture is centered and prominent; it
-/// is the highest-value action."
-///
-/// Settings isn't here yet. There's nothing to put in it until auth and
-/// account deletion exist — an empty Settings tab would be worse than none.
+/// Hosts the four destinations from the screen inventory — Horizon,
+/// Timeline, Exposure, Settings — plus capture as a centred, prominent
+/// action rather than a fifth tab, per the SRS: "Capture is centered and
+/// prominent; it is the highest-value action."
 class AppShell extends StatefulWidget {
   const AppShell({super.key});
 
@@ -28,6 +26,7 @@ class _AppShellState extends State<AppShell> {
     HorizonScreen(),
     TimelineScreen(),
     ExposureScreen(),
+    SettingsScreen(),
   ];
 
   @override
@@ -69,6 +68,12 @@ class _AppShellState extends State<AppShell> {
               label: 'Exposure',
               selected: _index == 2,
               onTap: () => setState(() => _index = 2),
+            ),
+            _NavButton(
+              icon: Icons.settings_outlined,
+              label: 'Settings',
+              selected: _index == 3,
+              onTap: () => setState(() => _index = 3),
             ),
           ],
         ),

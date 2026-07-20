@@ -15,6 +15,25 @@ enum ObligationCategory {
   other,
 }
 
+/// Single source of truth for how a category reads in the UI and in
+/// search — anywhere both need to agree, this is what they should call.
+extension ObligationCategoryLabel on ObligationCategory {
+  String get label => switch (this) {
+        ObligationCategory.contract => 'Contract',
+        ObligationCategory.subscription => 'Subscription',
+        ObligationCategory.payment => 'Payment',
+        ObligationCategory.insurance => 'Insurance',
+        ObligationCategory.licence => 'Licence / permit',
+        ObligationCategory.certification => 'Certification',
+        ObligationCategory.maintenance => 'Maintenance',
+        ObligationCategory.tax => 'Tax / filing',
+        ObligationCategory.warranty => 'Warranty',
+        ObligationCategory.document => 'Document',
+        ObligationCategory.commitment => 'Meeting / commitment',
+        ObligationCategory.other => 'Other',
+      };
+}
+
 enum Criticality { routine, important, critical }
 
 enum ObligationStatus {

@@ -8,25 +8,35 @@ import '../../../core/theme/theme.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../domain/entities/obligation.dart';
 
-/// Manual entry and draft review share this screen — the only difference is
-/// what pre-fills the fields and what the primary action does.
+/// Manual entry, draft review, and editing an existing obligation (e.g. from
+/// search) share this screen — the only difference is what pre-fills the
+/// fields, what the primary action does, and what happens to status on save.
 ///
 /// FR-103: title and date are the only required fields, and the form must be
 /// completable in under 10 seconds, so everything else starts collapsed
-/// behind "More details". In review mode there is already a draft on record
-/// (see UC-01), so the details start expanded for verification instead.
+/// behind "More details" for a fresh manual entry. Review and edit both
+/// start expanded — there's already real data worth looking at.
 class ObligationFormScreen extends ConsumerStatefulWidget {
   const ObligationFormScreen({
     super.key,
     this.draft,
+    this.existing,
     this.extractionDisclosure,
-  });
+  }) : assert(
+          draft == null || existing == null,
+          'pass draft or existing, not both',
+        );
 
   /// When set, the screen opens in draft-review mode: fields pre-filled from
   /// extraction, the row already persisted as [ObligationStatus.draft], and
-  /// the primary action confirms it into a live obligation rather than
-  /// creating a new one.
+  /// the primary action confirms it into a live obligation — always
+  /// [ObligationStatus.dormant] — rather than creating a new one.
   final Obligation? draft;
+
+  /// When set, the screen opens in edit mode for an already-live obligation
+  /// (e.g. tapped from search): fields pre-filled, and saving preserves its
+  /// existing status rather than forcing one.
+  final Obligation? existing;
 
   /// Shown as a banner in review mode. See ExtractionCapabilities.disclosure.
   final String? extractionDisclosure;
@@ -50,12 +60,14 @@ class _ObligationFormScreenState extends ConsumerState<ObligationFormScreen> {
   bool _saving = false;
   String? _dateError;
 
+  Obligation? get _source => widget.draft ?? widget.existing;
   bool get _isReview => widget.draft != null;
+  bool get _isEdit => widget.existing != null;
 
   @override
   void initState() {
     super.initState();
-    final d = widget.draft;
+    final d = _source;
     _title = TextEditingController(text: d?.title ?? '');
     _counterparty = TextEditingController(text: d?.counterparty ?? '');
     _noticeDays = TextEditingController(
@@ -68,9 +80,10 @@ class _ObligationFormScreenState extends ConsumerState<ObligationFormScreen> {
     _category = d?.category ?? ObligationCategory.contract;
     _criticality = d?.criticality ?? Criticality.important;
     _autoRenews = d?.autoRenews ?? false;
-    // Review mode: show everything up front for verification. Manual entry:
-    // stay collapsed so the common case is title + date and nothing else.
-    _detailsExpanded = _isReview;
+    // Review and edit: show everything up front, there's real data worth
+    // seeing. Fresh manual entry stays collapsed — title + date and nothing
+    // else is the common case.
+    _detailsExpanded = _isReview || _isEdit;
   }
 
   @override
@@ -107,32 +120,38 @@ class _ObligationFormScreenState extends ConsumerState<ObligationFormScreen> {
 
     setState(() => _saving = true);
 
-    final draft = widget.draft;
+    final source = _source;
     final amount = double.tryParse(_amount.text.trim());
     final notice = int.tryParse(_noticeDays.text.trim()) ?? 0;
 
     final obligation = Obligation(
-      id: draft?.id ?? const Uuid().v4(),
+      id: source?.id ?? const Uuid().v4(),
       title: _title.text.trim(),
       category: _category,
       expiryDate: _expiryDate!,
       noticeDays: notice,
       // Carried forward rather than reset: if extraction assumed a category
       // default and the user hasn't corrected it, the tag stays honest.
-      noticeDaysAssumed: draft?.noticeDaysAssumed ?? false,
+      noticeDaysAssumed: source?.noticeDaysAssumed ?? false,
       counterparty:
           _counterparty.text.trim().isEmpty ? null : _counterparty.text.trim(),
       value: amount != null && amount > 0
-          ? Money((amount * 100).round(), draft?.value?.currency ?? 'USD')
+          ? Money((amount * 100).round(), source?.value?.currency ?? 'USD')
           : null,
       autoRenews: _autoRenews,
       criticality: _criticality,
-      status: ObligationStatus.dormant,
-      recurrence: draft?.recurrence,
-      assigneeId: draft?.assigneeId,
-      notes: draft?.notes,
-      attachmentIds: draft?.attachmentIds ?? const [],
-      createdVia: draft?.createdVia ?? CaptureSource.manual,
+      // A confirmed draft is always dormant (newly live). An edit preserves
+      // whatever status the obligation already had — this form has no
+      // status field of its own to change it deliberately. A fresh manual
+      // entry has no source, so it defaults to dormant too.
+      status: _isReview
+          ? ObligationStatus.dormant
+          : (source?.status ?? ObligationStatus.dormant),
+      recurrence: source?.recurrence,
+      assigneeId: source?.assigneeId,
+      notes: source?.notes,
+      attachmentIds: source?.attachmentIds ?? const [],
+      createdVia: source?.createdVia ?? CaptureSource.manual,
     );
 
     await ref.read(obligationRepositoryProvider).upsert(obligation);
@@ -147,7 +166,11 @@ class _ObligationFormScreenState extends ConsumerState<ObligationFormScreen> {
     final tone = context.tone;
     return Scaffold(
       appBar: AppBar(
-        title: Text(_isReview ? 'Review draft' : 'New obligation'),
+        title: Text(
+          _isReview
+              ? 'Review draft'
+              : (_isEdit ? 'Edit obligation' : 'New obligation'),
+        ),
       ),
       body: SafeArea(
         child: Form(
@@ -161,7 +184,7 @@ class _ObligationFormScreenState extends ConsumerState<ObligationFormScreen> {
               ],
               TextFormField(
                 controller: _title,
-                autofocus: !_isReview,
+                autofocus: !_isReview && !_isEdit,
                 decoration: const InputDecoration(labelText: 'Title'),
                 validator: (v) =>
                     (v == null || v.trim().isEmpty) ? 'Required' : null,
@@ -197,7 +220,7 @@ class _ObligationFormScreenState extends ConsumerState<ObligationFormScreen> {
                     decoration: const InputDecoration(labelText: 'Category'),
                     items: [
                       for (final c in ObligationCategory.values)
-                        DropdownMenuItem(value: c, child: Text(_categoryLabel(c))),
+                        DropdownMenuItem(value: c, child: Text(c.label)),
                     ],
                     onChanged: (v) =>
                         setState(() => _category = v ?? _category),
@@ -267,20 +290,6 @@ class _ObligationFormScreenState extends ConsumerState<ObligationFormScreen> {
     );
   }
 
-  static String _categoryLabel(ObligationCategory c) => switch (c) {
-        ObligationCategory.contract => 'Contract',
-        ObligationCategory.subscription => 'Subscription',
-        ObligationCategory.payment => 'Payment',
-        ObligationCategory.insurance => 'Insurance',
-        ObligationCategory.licence => 'Licence / permit',
-        ObligationCategory.certification => 'Certification',
-        ObligationCategory.maintenance => 'Maintenance',
-        ObligationCategory.tax => 'Tax / filing',
-        ObligationCategory.warranty => 'Warranty',
-        ObligationCategory.document => 'Document',
-        ObligationCategory.commitment => 'Meeting / commitment',
-        ObligationCategory.other => 'Other',
-      };
 }
 
 class _DisclosureBanner extends StatelessWidget {
