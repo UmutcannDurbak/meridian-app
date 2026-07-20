@@ -11,10 +11,18 @@ a real deadline of 1 December, and 1 December is what the product shows you.
 
 ## Status
 
-Early scaffold. Domain logic, design system, and the on-device extraction
-channel are implemented. Persistence, sync, auth, payments and most screens are
-not. **This code has not been compiled** — it was authored without a Flutter
-SDK available. Expect to fix package version drift on first `pub get`.
+Domain logic, design system, on-device extraction channel, local persistence,
+and the manual-entry + document-scan capture loop are implemented and
+verified: `flutter pub get`, `gen-l10n`, `build_runner`, `flutter analyze`,
+and the full test suite (20 domain/repository tests + 4 widget tests exercising
+the actual capture flow) all run clean from a from-scratch codegen. CI
+(GitHub Actions) runs the same checks on every push/PR.
+
+Not yet built: cloud sync, auth, notifications wiring, Timeline/Exposure/
+Settings screens, delegation, payments, and encrypted attachment storage (a
+scanned document's photo isn't persisted yet, only the extracted fields). No
+iOS build has happened — that requires Codemagic or a Mac, neither of which
+this environment has. See the roadmap below.
 
 ---
 
@@ -23,6 +31,7 @@ SDK available. Expect to fix package version drift on first `pub get`.
 ```bash
 flutter pub get
 flutter gen-l10n
+dart run build_runner build --delete-conflicting-outputs   # drift codegen
 flutter test
 flutter run          # Android emulator — validates ~90% of behaviour
 ```
@@ -116,10 +125,15 @@ Shipping worldwide from day one means the strictest rule applies everywhere.
 - [x] Alert scheduling
 - [x] On-device extraction channel
 - [x] Horizon screen
-- [ ] Persistence (drift) and offline queue
+- [x] Persistence (drift) — single source of truth via StreamProvider
+- [x] Capture: manual entry, document scan (extraction wired to the Swift
+      channel), draft review/confirm
+- [ ] Offline write queue (writes already go straight to drift; sync to a
+      backend doesn't exist yet, so there's nothing to queue against)
+- [ ] Encrypted attachment storage — scanned photo isn't retained, only the
+      extracted fields
 - [ ] Auth — Sign in with Apple, in-app account deletion
-- [ ] Capture flows: scan, share extension, CSV import, templates
-- [ ] Draft review screen
+- [ ] Capture: email forwarding, share extension, CSV import, templates
 - [ ] Timeline and Exposure views
 - [ ] Notifications wiring, server-side scheduling
 - [ ] Delegation
