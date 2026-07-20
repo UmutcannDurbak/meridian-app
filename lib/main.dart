@@ -2,20 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'application/obligation_providers.dart';
 import 'core/theme/theme.dart';
-import 'data/local/database.dart';
 import 'presentation/screens/horizon/horizon_screen.dart';
 
 void main() {
-  runApp(
-    ProviderScope(
-      overrides: [
-        databaseProvider.overrideWithValue(AppDatabase()),
-      ],
-      child: const MeridianApp(),
-    ),
-  );
+  // obligationRepositoryProvider self-constructs its backing store on first
+  // read (the real database on io platforms, an in-memory one on web) — see
+  // data/repositories/repository_provider.dart. No override needed here;
+  // only tests override it, with an in-memory test database.
+  runApp(const ProviderScope(child: MeridianApp()));
 }
 
 class MeridianApp extends StatelessWidget {

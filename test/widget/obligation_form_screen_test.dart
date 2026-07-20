@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:meridian/application/obligation_providers.dart';
 import 'package:meridian/core/theme/theme.dart';
 import 'package:meridian/data/local/database.dart';
 import 'package:meridian/data/repositories/obligation_repository.dart';
+import 'package:meridian/data/repositories/repository_provider_io.dart';
 import 'package:meridian/domain/entities/obligation.dart';
 import 'package:meridian/presentation/screens/capture/obligation_form_screen.dart';
 

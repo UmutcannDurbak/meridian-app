@@ -1,25 +1,15 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../data/local/database.dart';
-import '../data/repositories/obligation_repository.dart';
+import '../data/repositories/repository_provider.dart';
 import '../domain/entities/obligation.dart';
+
+export '../data/repositories/repository_provider.dart'
+    show obligationRepositoryProvider;
 
 /// Injected clock. Never call DateTime.now() outside this provider — it
 /// makes every time-dependent behaviour in this app untestable, and this app
 /// is almost entirely time-dependent behaviour.
 final nowProvider = Provider<DateTime>((ref) => DateTime.now());
-
-/// Overridden in `main()` with the on-disk instance, and in tests with
-/// [AppDatabase.forTesting]. Never constructed implicitly — a provider that
-/// silently opened a real file during a widget test would leak state
-/// between tests.
-final databaseProvider = Provider<AppDatabase>((ref) {
-  throw UnimplementedError('databaseProvider must be overridden');
-});
-
-final obligationRepositoryProvider = Provider<ObligationRepository>((ref) {
-  return ObligationRepository(ref.watch(databaseProvider));
-});
 
 /// The database is the single source of truth. This stream is how the rest
 /// of the app observes it — no separate in-memory copy to keep in sync.
