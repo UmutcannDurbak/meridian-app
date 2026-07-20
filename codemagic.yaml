@@ -40,6 +40,11 @@ workflows:
       - name: Fetch packages
         script: flutter pub get
 
+      - name: Generate code
+        script: |
+          flutter gen-l10n
+          dart run build_runner build --delete-conflicting-outputs
+
       - name: Analyse
         script: flutter analyze
 
@@ -88,6 +93,10 @@ workflows:
     scripts:
       - name: Packages
         script: flutter pub get
+      - name: Generate code
+        script: |
+          flutter gen-l10n
+          dart run build_runner build --delete-conflicting-outputs
       - name: Analyse
         script: flutter analyze --fatal-infos
       - name: Test

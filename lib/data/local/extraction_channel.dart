@@ -76,6 +76,11 @@ class ExtractionChannel {
         ocr: r?['ocr'] as bool? ?? false,
         onDeviceModel: r?['onDeviceModel'] as bool? ?? false,
       );
+    } on MissingPluginException {
+      // No iOS host implementation on this platform (e.g. the Android
+      // emulator used for the Windows dev loop). Not an error — capture
+      // just degrades to manual entry.
+      return const ExtractionCapabilities(ocr: false, onDeviceModel: false);
     } on PlatformException {
       return const ExtractionCapabilities(ocr: false, onDeviceModel: false);
     }
@@ -105,6 +110,8 @@ class ExtractionChannel {
         },
         confidence: r['confidence'] as String? ?? 'none',
       );
+    } on MissingPluginException {
+      return null;
     } on PlatformException {
       return null;
     }

@@ -2,11 +2,20 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'application/obligation_providers.dart';
 import 'core/theme/theme.dart';
+import 'data/local/database.dart';
 import 'presentation/screens/horizon/horizon_screen.dart';
 
 void main() {
-  runApp(const ProviderScope(child: MeridianApp()));
+  runApp(
+    ProviderScope(
+      overrides: [
+        databaseProvider.overrideWithValue(AppDatabase()),
+      ],
+      child: const MeridianApp(),
+    ),
+  );
 }
 
 class MeridianApp extends StatelessWidget {

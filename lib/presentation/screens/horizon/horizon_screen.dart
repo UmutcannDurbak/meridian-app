@@ -4,6 +4,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../application/obligation_providers.dart';
 import '../../../core/theme/theme.dart';
 import '../../../core/theme/tokens.dart';
+import '../../../domain/entities/obligation.dart';
+import '../../screens/capture/capture_sheet.dart';
+import '../../screens/capture/obligation_form_screen.dart';
 import '../../widgets/obligation_row.dart';
 
 /// The home screen, and the answer to one question: what needs me now?
@@ -17,75 +20,206 @@ class HorizonScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final tone = context.tone;
-    final grouped = ref.watch(horizonGroupsProvider);
-    final now = ref.watch(nowProvider);
+    final asyncAll = ref.watch(obligationListProvider);
 
     return Scaffold(
       body: SafeArea(
-        child: grouped.isEmpty
-            ? const _Empty()
-            : CustomScrollView(
-                physics: const BouncingScrollPhysics(),
-                slivers: [
-                  SliverPadding(
-                    padding: const EdgeInsets.fromLTRB(
-                      Space.md,
-                      Space.lg,
-                      Space.md,
-                      Space.sm,
-                    ),
-                    sliver: SliverToBoxAdapter(
-                      child: Text('Horizon', style: Type.display(tone.ink)),
-                    ),
+        child: asyncAll.when(
+          loading: () => const _HorizonSkeleton(),
+          error: (error, stack) => const _ErrorState(
+            message: 'Could not load your obligations.',
+          ),
+          data: (_) => const _HorizonList(),
+        ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => showCaptureSheet(context),
+        backgroundColor: tone.ink,
+        foregroundColor: tone.paper,
+        child: const Icon(Icons.add),
+      ),
+    );
+  }
+}
+
+class _HorizonList extends ConsumerWidget {
+  const _HorizonList();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final tone = context.tone;
+    final grouped = ref.watch(horizonGroupsProvider);
+    final drafts = ref.watch(draftListProvider);
+    final now = ref.watch(nowProvider);
+    final repo = ref.watch(obligationRepositoryProvider);
+
+    if (grouped.isEmpty && drafts.isEmpty) return const _Empty();
+
+    return CustomScrollView(
+      physics: const BouncingScrollPhysics(),
+      slivers: [
+        SliverPadding(
+          padding: const EdgeInsets.fromLTRB(
+            Space.md,
+            Space.lg,
+            Space.md,
+            Space.sm,
+          ),
+          sliver: SliverToBoxAdapter(
+            child: Text('Horizon', style: Type.display(tone.ink)),
+          ),
+        ),
+        if (drafts.isNotEmpty)
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(
+                Space.md,
+                0,
+                Space.md,
+                Space.md,
+              ),
+              child: _DraftBanner(count: drafts.length, first: drafts.first),
+            ),
+          ),
+        for (final group in grouped) ...[
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(
+                Space.md,
+                Space.lg,
+                Space.md,
+                Space.sm,
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    group.label.toUpperCase(),
+                    style: Type.eyebrow(tone.inkMuted),
                   ),
-                  for (final group in grouped) ...[
-                    SliverToBoxAdapter(
-                      child: Padding(
-                        padding: const EdgeInsets.fromLTRB(
-                          Space.md,
-                          Space.lg,
-                          Space.md,
-                          Space.sm,
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              group.label.toUpperCase(),
-                              style: Type.eyebrow(tone.inkMuted),
-                            ),
-                            Text(
-                              '${group.items.length}',
-                              style: Type.eyebrow(tone.inkFaint),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    SliverList.separated(
-                      itemCount: group.items.length,
-                      separatorBuilder: (_, __) =>
-                          Divider(color: tone.hairline, height: 1),
-                      itemBuilder: (context, i) {
-                        final o = group.items[i];
-                        return ObligationRow(
-                          obligation: o,
-                          now: now,
-                          onResolve: () => ref
-                              .read(obligationListProvider.notifier)
-                              .resolve(o.id),
-                          onSnooze: () => ref
-                              .read(obligationListProvider.notifier)
-                              .snooze(o.id, const Duration(days: 7)),
-                        );
-                      },
-                    ),
-                  ],
-                  const SliverToBoxAdapter(
-                    child: SizedBox(height: Space.huge),
+                  Text(
+                    '${group.items.length}',
+                    style: Type.eyebrow(tone.inkFaint),
                   ),
                 ],
               ),
+            ),
+          ),
+          SliverList.separated(
+            itemCount: group.items.length,
+            separatorBuilder: (_, __) => Divider(color: tone.hairline, height: 1),
+            itemBuilder: (context, i) {
+              final o = group.items[i];
+              return ObligationRow(
+                obligation: o,
+                now: now,
+                onResolve: () => repo.resolve(o.id),
+                onSnooze: () => repo.snooze(o.id, const Duration(days: 7)),
+              );
+            },
+          ),
+        ],
+        const SliverToBoxAdapter(child: SizedBox(height: Space.huge)),
+      ],
+    );
+  }
+}
+
+/// Unconfirmed captures are never alerted, never auto-deleted, and never
+/// treated as live obligations — but they also must not be forgotten. This
+/// is how a user finds their way back to one. See ObligationStatus.draft.
+class _DraftBanner extends StatelessWidget {
+  const _DraftBanner({required this.count, required this.first});
+  final int count;
+  final Obligation first;
+
+  @override
+  Widget build(BuildContext context) {
+    final tone = context.tone;
+    return InkWell(
+      borderRadius: BorderRadius.circular(Radii.md),
+      onTap: () => Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          builder: (_) => ObligationFormScreen(draft: first),
+        ),
+      ),
+      child: Container(
+        padding: const EdgeInsets.all(Space.md),
+        decoration: BoxDecoration(
+          color: tone.surface,
+          borderRadius: BorderRadius.circular(Radii.md),
+          border: Border.all(color: tone.hairline),
+        ),
+        child: Row(
+          children: [
+            Icon(Icons.description_outlined, size: 18, color: tone.inkMuted),
+            const SizedBox(width: Space.sm),
+            Expanded(
+              child: Text(
+                count == 1
+                    ? 'Draft ready — ${first.title.isEmpty ? "untitled" : first.title}'
+                    : '$count drafts awaiting review',
+                style: Type.label(tone.ink),
+              ),
+            ),
+            Icon(Icons.chevron_right, size: 18, color: tone.inkFaint),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Loading state. A skeleton, never a spinner — see NFR on required states.
+class _HorizonSkeleton extends StatelessWidget {
+  const _HorizonSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    final tone = context.tone;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(Space.md, Space.lg, Space.md, 0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _bar(tone.surface, 120, 28),
+          const SizedBox(height: Space.xl),
+          _bar(tone.surface, 80, 12),
+          const SizedBox(height: Space.md),
+          for (var i = 0; i < 4; i++) ...[
+            _bar(tone.surface, double.infinity, 56),
+            const SizedBox(height: Space.sm),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _bar(Color color, double width, double height) => Container(
+        width: width,
+        height: height,
+        decoration: BoxDecoration(
+          color: color,
+          borderRadius: BorderRadius.circular(Radii.sm),
+        ),
+      );
+}
+
+class _ErrorState extends StatelessWidget {
+  const _ErrorState({required this.message});
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    final tone = context.tone;
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(Space.xl),
+        child: Text(
+          message,
+          style: Type.body(tone.inkMuted),
+          textAlign: TextAlign.center,
+        ),
       ),
     );
   }
