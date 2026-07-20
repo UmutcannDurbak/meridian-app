@@ -137,9 +137,13 @@ Shipping worldwide from day one means the strictest rule applies everywhere.
       backend doesn't exist yet, so there's nothing to queue against)
 - [ ] Encrypted attachment storage — scanned photo isn't retained, only the
       extracted fields
+- [x] Timeline (12-month forward view) and Exposure (spend forecast by
+      month, by currency) views, with real bottom navigation — Horizon /
+      Timeline / Exposure, capture as a centred FAB
 - [ ] Auth — Sign in with Apple, in-app account deletion
 - [ ] Capture: email forwarding, share extension, templates
-- [ ] Timeline and Exposure views
+- [ ] Search across obligations
+- [ ] Settings screen — nothing to put in it yet without auth
 - [ ] Notifications wiring, server-side scheduling
 - [ ] Delegation
 - [ ] Payments — RevenueCat, server entitlements, region-aware paywall
