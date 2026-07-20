@@ -1,0 +1,55 @@
+name: meridian
+description: Obligation and deadline intelligence.
+publish_to: none
+version: 0.1.0+1
+
+environment:
+  sdk: ">=3.5.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+
+  # State
+  flutter_riverpod: ^2.5.1
+
+  # Routing — go_router chosen for universal-link support, which the
+  # payment return flow and email deep links both require.
+  go_router: ^14.2.0
+
+  # UI
+  google_fonts: ^6.2.1
+  intl: ^0.20.2
+
+  # Storage. Tokens go in the Keychain, never SharedPreferences.
+  flutter_secure_storage: ^9.2.2
+  drift: ^2.19.0
+  sqlite3_flutter_libs: ^0.5.24
+  path_provider: ^2.1.4
+
+  # Network
+  dio: ^5.6.0
+
+  # Capture
+  image_picker: ^1.1.2
+  file_picker: ^8.1.2
+
+  # Payments — RevenueCat over raw StoreKit for server-side receipt
+  # validation and entitlement management.
+  purchases_flutter: ^8.0.0
+
+  # Notifications
+  flutter_local_notifications: ^17.2.2
+
+  meta: ^1.15.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+
+flutter:
+  uses-material-design: true
+  generate: true

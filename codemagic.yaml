@@ -1,0 +1,94 @@
+# Codemagic CI — the Mac you rent instead of buying.
+#
+# You develop on Windows and never open Xcode. This file is what compiles,
+# signs and ships the iOS build. Set it up in week one, before there are real
+# features: discovering a signing problem the week you plan to launch is the
+# single most common way solo iOS projects slip a month.
+
+workflows:
+  ios-testflight:
+    name: iOS — TestFlight
+    instance_type: mac_mini_m2
+    max_build_duration: 60
+
+    integrations:
+      app_store_connect: MeridianAppStoreKey
+
+    environment:
+      # Pin this. Apple requires builds compiled with Xcode 26 / iOS 26 SDK,
+      # and relying on the runner default means a silent break the day
+      # Codemagic rotates it.
+      xcode: 26.0
+      flutter: stable
+      cocoapods: default
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: app.meridian.ios
+      vars:
+        APP_STORE_APPLE_ID: 0000000000
+
+    triggering:
+      events:
+        - push
+      branch_patterns:
+        - pattern: main
+          include: true
+      # Build on merge, not on every commit. Mac minutes are billed and
+      # feature-branch noise will burn the free tier in a week.
+
+    scripts:
+      - name: Fetch packages
+        script: flutter pub get
+
+      - name: Analyse
+        script: flutter analyze
+
+      - name: Test
+        script: flutter test
+
+      - name: Install pods
+        script: |
+          find . -name "Podfile" -execdir pod install \;
+
+      - name: Build IPA
+        script: |
+          flutter build ipa --release \
+            --build-number=$PROJECT_BUILD_NUMBER \
+            --export-options-plist=/Users/builder/export_options.plist
+
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - flutter_drive.log
+
+    publishing:
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true
+        # Deliberately NOT submitting to App Review automatically. Every
+        # submission needs fresh reviewer notes and a working demo account.
+        submit_to_app_store: false
+      email:
+        recipients:
+          - you@example.com
+        notify:
+          success: true
+          failure: true
+
+  # Runs on every PR. No Mac needed for analysis and unit tests, so this is
+  # cheap and catches most regressions before they reach the paid runner.
+  checks:
+    name: Analyse and test
+    instance_type: linux_x2
+    max_build_duration: 20
+    environment:
+      flutter: stable
+    triggering:
+      events:
+        - pull_request
+    scripts:
+      - name: Packages
+        script: flutter pub get
+      - name: Analyse
+        script: flutter analyze --fatal-infos
+      - name: Test
+        script: flutter test --coverage

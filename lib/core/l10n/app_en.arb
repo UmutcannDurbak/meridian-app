@@ -1,0 +1,19 @@
+{
+  "@@locale": "en",
+  "horizonTitle": "Horizon",
+  "groupOverdue": "Overdue",
+  "groupThisWeek": "This week",
+  "groupThisMonth": "This month",
+  "groupLater": "Later",
+  "emptyTitle": "Nothing is waiting on you.",
+  "emptyBody": "Add your first contract or renewal and Meridian will tell you when you need to act — not when it is already too late.",
+  "actionResolve": "Resolve",
+  "actionSnooze": "Snooze",
+  "tagAutoRenews": "Renews unless cancelled",
+  "tagNoticeAssumed": "Notice period assumed",
+  "captureOnDevice": "Read on this device. The document is not uploaded.",
+  "daysOver": "{count}d over",
+  "@daysOver": { "placeholders": { "count": { "type": "int" } } },
+  "daysLeft": "{count}d",
+  "@daysLeft": { "placeholders": { "count": { "type": "int" } } }
+}

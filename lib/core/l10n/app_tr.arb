@@ -1,0 +1,17 @@
+{
+  "@@locale": "tr",
+  "horizonTitle": "Ufuk",
+  "groupOverdue": "Gecikmiş",
+  "groupThisWeek": "Bu hafta",
+  "groupThisMonth": "Bu ay",
+  "groupLater": "Daha sonra",
+  "emptyTitle": "Bekleyen bir şey yok.",
+  "emptyBody": "İlk sözleşmenizi veya yenilemenizi ekleyin; Meridian, çok geç olmadan önce ne zaman harekete geçmeniz gerektiğini size söyleyecek.",
+  "actionResolve": "Tamamla",
+  "actionSnooze": "Ertele",
+  "tagAutoRenews": "İptal edilmezse yenilenir",
+  "tagNoticeAssumed": "İhbar süresi varsayıldı",
+  "captureOnDevice": "Bu cihazda okundu. Belge yüklenmiyor.",
+  "daysOver": "{count}g gecikti",
+  "daysLeft": "{count}g"
+}
