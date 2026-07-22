@@ -142,9 +142,17 @@ Shipping worldwide from day one means the strictest rule applies everywhere.
       backend doesn't exist yet, so there's nothing to queue against)
 - [ ] Encrypted attachment storage — scanned photo isn't retained, only the
       extracted fields
-- [x] Timeline (12-month forward view) and Exposure (spend forecast by
-      month, by currency) views, with real bottom navigation — Horizon /
-      Timeline / Exposure, capture as a centred FAB
+- [x] Timeline — a 12-month forward calendar (MonthCalendar), day cells
+      dotted by pressure, tap a day to filter the list below it. Stats
+      header: this week / this month counts with a critical breakout, plus
+      net position (income minus expense, obligation now carries a
+      MoneyDirection) for valued obligations due this month, kept separate
+      per currency. Exposure (spend forecast by month, by currency) is the
+      12-month version of the same idea. Real bottom navigation — Horizon /
+      Timeline / Exposure / Settings, capture as a centred FAB
+- [x] Edit and delete — tap any obligation row to edit it in place;
+      long-press for the full action set (edit / snooze / resolve /
+      delete), delete behind a confirmation dialog
 - [x] Search across title, counterparty, notes, category (SearchService,
       reachable from Horizon); tapping a result opens it in a new edit
       mode on ObligationFormScreen — status preserved, not forced dormant

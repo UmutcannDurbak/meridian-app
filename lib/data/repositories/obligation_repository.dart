@@ -107,6 +107,7 @@ class ObligationRepository implements ObligationRepositoryBase {
       counterparty: Value(o.counterparty),
       valueMinorUnits: Value(o.value?.minorUnits),
       valueCurrency: Value(o.value?.currency),
+      direction: Value(o.direction.name),
       autoRenews: Value(o.autoRenews),
       criticality: Value(o.criticality.name),
       status: Value(o.status.name),
@@ -140,6 +141,11 @@ class ObligationRepository implements ObligationRepositoryBase {
       value: r.valueMinorUnits != null && r.valueCurrency != null
           ? Money(r.valueMinorUnits!, r.valueCurrency!)
           : null,
+      direction: _enumByName(
+        MoneyDirection.values,
+        r.direction,
+        MoneyDirection.expense,
+      ),
       autoRenews: r.autoRenews,
       criticality: _enumByName(
         Criticality.values,

@@ -17,7 +17,21 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting() : super(NativeDatabase.memory());
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
+
+  @override
+  MigrationStrategy get migration => MigrationStrategy(
+        onCreate: (m) => m.createAll(),
+        onUpgrade: (m, from, to) async {
+          // v1 -> v2: direction (income/expense) added for the net-position
+          // stat. Existing rows default to 'expense' — the product's
+          // original assumption, and the only sign every obligation created
+          // before this column existed was ever entered under.
+          if (from < 2) {
+            await m.addColumn(obligationRows, obligationRows.direction);
+          }
+        },
+      );
 
   static QueryExecutor _open() {
     return LazyDatabase(() async {

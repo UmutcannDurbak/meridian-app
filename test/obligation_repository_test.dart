@@ -24,6 +24,7 @@ void main() {
       noticeDaysAssumed: true,
       counterparty: 'Acme Property Group',
       value: const Money(1250000, 'EUR'),
+      direction: MoneyDirection.income,
       autoRenews: true,
       criticality: Criticality.critical,
       status: ObligationStatus.dormant,
@@ -49,6 +50,7 @@ void main() {
     expect(loaded.counterparty, 'Acme Property Group');
     expect(loaded.value?.minorUnits, 1250000);
     expect(loaded.value?.currency, 'EUR');
+    expect(loaded.direction, MoneyDirection.income);
     expect(loaded.autoRenews, isTrue);
     expect(loaded.criticality, Criticality.critical);
     expect(loaded.recurrence?.frequency, Frequency.annual);

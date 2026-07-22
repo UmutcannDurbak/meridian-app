@@ -10,6 +10,8 @@ void main() {
     required int daysUntil,
     Criticality criticality = Criticality.important,
     ObligationStatus status = ObligationStatus.dormant,
+    Money? value,
+    MoneyDirection direction = MoneyDirection.expense,
   }) =>
       Obligation(
         id: id,
@@ -18,6 +20,8 @@ void main() {
         expiryDate: now.add(Duration(days: daysUntil)),
         criticality: criticality,
         status: status,
+        value: value,
+        direction: direction,
       );
 
   group('ObligationStatsService.compute', () {
@@ -111,6 +115,63 @@ void main() {
       expect(stats.thisWeekCritical, 0);
       expect(stats.thisMonthCount, 0);
       expect(stats.thisMonthCritical, 0);
+      expect(stats.netByCurrencyThisMonth, isEmpty);
+    });
+
+    test('income adds and expense subtracts, within this month', () {
+      final stats = ObligationStatsService.compute(
+        [
+          obligation(
+            id: 'a',
+            daysUntil: 2,
+            value: const Money(100000, 'USD'),
+          ),
+          obligation(
+            id: 'b',
+            daysUntil: 2,
+            value: const Money(30000, 'USD'),
+            direction: MoneyDirection.income,
+          ),
+        ],
+        now,
+      );
+
+      expect(stats.netByCurrencyThisMonth, {'USD': -70000});
+    });
+
+    test('keeps currencies separate rather than summing them', () {
+      final stats = ObligationStatsService.compute(
+        [
+          obligation(id: 'a', daysUntil: 2, value: const Money(5000, 'USD')),
+          obligation(
+            id: 'b',
+            daysUntil: 2,
+            value: const Money(3000, 'EUR'),
+            direction: MoneyDirection.income,
+          ),
+        ],
+        now,
+      );
+
+      expect(stats.netByCurrencyThisMonth, {'USD': -5000, 'EUR': 3000});
+    });
+
+    test('obligations without a value contribute nothing to net', () {
+      final stats = ObligationStatsService.compute(
+        [obligation(id: 'a', daysUntil: 2)],
+        now,
+      );
+
+      expect(stats.netByCurrencyThisMonth, isEmpty);
+    });
+
+    test('a valued obligation beyond this month is excluded from net', () {
+      final stats = ObligationStatsService.compute(
+        [obligation(id: 'a', daysUntil: 45, value: const Money(1000, 'USD'))],
+        now,
+      );
+
+      expect(stats.netByCurrencyThisMonth, isEmpty);
     });
   });
 }

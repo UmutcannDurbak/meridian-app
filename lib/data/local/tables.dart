@@ -19,6 +19,7 @@ class ObligationRows extends Table {
   // Money as integer minor units — never a float. See Obligation.value.
   IntColumn get valueMinorUnits => integer().nullable()();
   TextColumn get valueCurrency => text().nullable()();
+  TextColumn get direction => text().withDefault(const Constant('expense'))();
 
   BoolColumn get autoRenews => boolean().withDefault(const Constant(false))();
   TextColumn get criticality =>

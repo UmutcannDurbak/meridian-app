@@ -67,6 +67,14 @@ class Money {
   double get major => minorUnits / 100;
 }
 
+/// Which way [Obligation.value] moves. Expense is the default and the
+/// product's original assumption — most obligations are things you owe —
+/// but a lease you're renting out or a retainer you're owed is money
+/// coming in, not going out, and the net-position stat needs to tell the
+/// two apart rather than silently summing them as if they were the same
+/// sign.
+enum MoneyDirection { expense, income }
+
 /// A dated commitment with a consequence.
 ///
 /// The field that matters most here is [actionDeadline], which is derived,
@@ -84,6 +92,7 @@ class Obligation {
     this.noticeDaysAssumed = false,
     this.counterparty,
     this.value,
+    this.direction = MoneyDirection.expense,
     this.autoRenews = false,
     this.criticality = Criticality.important,
     this.status = ObligationStatus.dormant,
@@ -111,6 +120,10 @@ class Obligation {
 
   final String? counterparty;
   final Money? value;
+
+  /// Meaningless without [value] — an obligation with no monetary value has
+  /// no direction to speak of. See [MoneyDirection].
+  final MoneyDirection direction;
 
   /// When true, inaction has a cost: the term renews by itself.
   final bool autoRenews;
@@ -179,6 +192,7 @@ class Obligation {
     bool? noticeDaysAssumed,
     String? counterparty,
     Money? value,
+    MoneyDirection? direction,
     bool? autoRenews,
     Criticality? criticality,
     ObligationStatus? status,
@@ -196,6 +210,7 @@ class Obligation {
         noticeDaysAssumed: noticeDaysAssumed ?? this.noticeDaysAssumed,
         counterparty: counterparty ?? this.counterparty,
         value: value ?? this.value,
+        direction: direction ?? this.direction,
         autoRenews: autoRenews ?? this.autoRenews,
         criticality: criticality ?? this.criticality,
         status: status ?? this.status,

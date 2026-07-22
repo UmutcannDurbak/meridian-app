@@ -57,6 +57,7 @@ class _ObligationFormScreenState extends ConsumerState<ObligationFormScreen> {
   DateTime? _expiryDate;
   late ObligationCategory _category;
   late Criticality _criticality;
+  late MoneyDirection _direction;
   late bool _autoRenews;
   late bool _detailsExpanded;
   bool _saving = false;
@@ -81,6 +82,7 @@ class _ObligationFormScreenState extends ConsumerState<ObligationFormScreen> {
     _expiryDate = d?.expiryDate;
     _category = d?.category ?? ObligationCategory.contract;
     _criticality = d?.criticality ?? Criticality.important;
+    _direction = d?.direction ?? MoneyDirection.expense;
     _autoRenews = d?.autoRenews ?? false;
     // Review and edit: show everything up front, there's real data worth
     // seeing. Fresh manual entry stays collapsed — title + date and nothing
@@ -140,6 +142,7 @@ class _ObligationFormScreenState extends ConsumerState<ObligationFormScreen> {
       value: amount != null && amount > 0
           ? Money((amount * 100).round(), source?.value?.currency ?? 'USD')
           : null,
+      direction: _direction,
       autoRenews: _autoRenews,
       criticality: _criticality,
       // A confirmed draft is always dormant (newly live). An edit preserves
@@ -251,6 +254,22 @@ class _ObligationFormScreenState extends ConsumerState<ObligationFormScreen> {
                     keyboardType:
                         const TextInputType.numberWithOptions(decimal: true),
                     decoration: const InputDecoration(labelText: 'Value (USD)'),
+                  ),
+                  const SizedBox(height: Space.md),
+                  SegmentedButton<MoneyDirection>(
+                    segments: const [
+                      ButtonSegment(
+                        value: MoneyDirection.expense,
+                        label: Text('You pay'),
+                      ),
+                      ButtonSegment(
+                        value: MoneyDirection.income,
+                        label: Text('You receive'),
+                      ),
+                    ],
+                    selected: {_direction},
+                    onSelectionChanged: (s) =>
+                        setState(() => _direction = s.first),
                   ),
                   const SizedBox(height: Space.md),
                   SwitchListTile.adaptive(

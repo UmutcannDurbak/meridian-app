@@ -59,6 +59,16 @@ class InMemoryObligationRepository implements ObligationRepositoryBase {
         expiryDate: now.subtract(const Duration(days: 2)),
         criticality: Criticality.routine,
       ),
+      Obligation(
+        id: 'demo-5',
+        title: 'Client retainer — Bellwether Co.',
+        category: ObligationCategory.payment,
+        expiryDate: now.add(const Duration(days: 10)),
+        counterparty: 'Bellwether Co.',
+        value: const Money(600000, 'USD'),
+        direction: MoneyDirection.income,
+        criticality: Criticality.routine,
+      ),
     ];
     for (final o in demo) {
       _items[o.id] = o;
