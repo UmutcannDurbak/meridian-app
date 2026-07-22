@@ -1,4 +1,5 @@
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/semantics.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 
@@ -71,105 +72,119 @@ class ObligationRow extends StatelessWidget {
         }
         return false; // parent controls removal after state update
       },
-      child: Pressable(
+      // Swipe-to-resolve/snooze doesn't reach a screen-reader user — that
+      // gesture is claimed by VoiceOver/TalkBack for their own navigation.
+      // Resolve and Snooze are exposed here as custom actions instead, so
+      // they're reachable without the gesture at all. Delete stays behind
+      // the long-press action sheet either way — it already asks for
+      // confirmation there, and a raw custom action bypassing that would
+      // make deleting less safe for a screen-reader user, not more
+      // accessible.
+      child: Semantics(
+        label: _semanticLabel(),
+        button: true,
         onTap: onTap,
-        onLongPress: onTap == null
-            ? null
-            : () {
-                HapticFeedback.mediumImpact();
-                showObligationActionSheet(
-                  context,
-                  onEdit: () => onTap?.call(),
-                  onSnooze: () => onSnooze?.call(),
-                  onResolve: () => onResolve?.call(),
-                  onDelete: () => onDelete?.call(),
-                );
-              },
-        child: Container(
-          padding: const EdgeInsets.all(Space.md),
-          decoration: BoxDecoration(
-            color: tone.surface,
-            borderRadius: BorderRadius.circular(Radii.md),
-            border: Border.all(color: tone.hairline),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(
-                    width: 36,
-                    height: 36,
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                      color: tone.paper,
-                      borderRadius: BorderRadius.circular(Radii.sm),
+        onLongPress: _openActionSheet(context),
+        customSemanticsActions: {
+          if (onResolve case final resolve?)
+            const CustomSemanticsAction(label: 'Resolve'): resolve,
+          if (onSnooze case final snooze?)
+            const CustomSemanticsAction(label: 'Snooze 7 days'): snooze,
+        },
+        excludeSemantics: true,
+        child: Pressable(
+          onTap: onTap,
+          onLongPress: onTap == null ? null : _openActionSheet(context),
+          child: Container(
+            padding: const EdgeInsets.all(Space.md),
+            decoration: BoxDecoration(
+              color: tone.surface,
+              borderRadius: BorderRadius.circular(Radii.md),
+              border: Border.all(color: tone.hairline),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      width: 36,
+                      height: 36,
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: tone.paper,
+                        borderRadius: BorderRadius.circular(Radii.sm),
+                      ),
+                      child: Icon(
+                        _categoryIcon(o.category),
+                        size: 17,
+                        color: tone.inkMuted,
+                      ),
                     ),
-                    child: Icon(
-                      _categoryIcon(o.category),
-                      size: 17,
-                      color: tone.inkMuted,
-                    ),
-                  ),
-                  const SizedBox(width: Space.sm),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          o.title,
-                          style: Type.heading(tone.ink),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        if (o.counterparty != null) ...[
-                          const SizedBox(height: Space.xxs),
+                    const SizedBox(width: Space.sm),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
                           Text(
-                            o.counterparty!,
-                            style: Type.label(tone.inkMuted),
+                            o.title,
+                            style: Type.heading(tone.ink),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
+                          if (o.counterparty != null) ...[
+                            const SizedBox(height: Space.xxs),
+                            Text(
+                              o.counterparty!,
+                              style: Type.label(tone.inkMuted),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
                         ],
+                      ),
+                    ),
+                    const SizedBox(width: Space.md),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text(_dayLabel(days), style: Type.numeric(tone.ink)),
+                        const SizedBox(height: Space.xxs),
+                        Text(
+                          DateFormat.MMMd().format(o.actionDeadline),
+                          style: Type.label(tone.inkMuted),
+                        ),
                       ],
                     ),
-                  ),
-                  const SizedBox(width: Space.md),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
+                  ],
+                ),
+                const SizedBox(height: Space.md),
+                ActionWindowBar(
+                  pressure: pressure,
+                  windowStartFraction: o.noticeDays > 0 ? 0.35 : 0.0,
+                ),
+                if (o.autoRenews || o.noticeDaysAssumed) ...[
+                  const SizedBox(height: Space.sm),
+                  // Wrap, not Row — two tags fit on one line at normal text
+                  // size but not at a larger accessibility size, and this
+                  // should reflow rather than overflow when that happens.
+                  Wrap(
+                    spacing: Space.sm,
+                    runSpacing: Space.xs,
                     children: [
-                      Text(_dayLabel(days), style: Type.numeric(tone.ink)),
-                      const SizedBox(height: Space.xxs),
-                      Text(
-                        DateFormat.MMMd().format(o.actionDeadline),
-                        style: Type.label(tone.inkFaint),
-                      ),
+                      if (o.autoRenews)
+                        _tag(context, 'Renews unless cancelled'),
+                      if (o.noticeDaysAssumed)
+                        // Surfaced deliberately: an assumed notice period
+                        // that is wrong is the one way this product can
+                        // actively mislead.
+                        _tag(context, 'Notice period assumed'),
                     ],
                   ),
                 ],
-              ),
-              const SizedBox(height: Space.md),
-              ActionWindowBar(
-                pressure: pressure,
-                windowStartFraction: o.noticeDays > 0 ? 0.35 : 0.0,
-              ),
-              if (o.autoRenews || o.noticeDaysAssumed) ...[
-                const SizedBox(height: Space.sm),
-                Row(
-                  children: [
-                    if (o.autoRenews)
-                      _tag(context, 'Renews unless cancelled'),
-                    if (o.noticeDaysAssumed) ...[
-                      if (o.autoRenews) const SizedBox(width: Space.sm),
-                      // Surfaced deliberately: an assumed notice period that is
-                      // wrong is the one way this product can actively mislead.
-                      _tag(context, 'Notice period assumed'),
-                    ],
-                  ],
-                ),
               ],
-            ],
+            ),
           ),
         ),
       ),
@@ -195,6 +210,43 @@ class ObligationRow extends StatelessWidget {
     if (days < 0) return '${-days}d over';
     if (days == 0) return 'Today';
     return '${days}d';
+  }
+
+  /// One coherent sentence a screen reader announces for the whole row,
+  /// standing in for the several separate Text widgets excludeSemantics
+  /// hides — otherwise a screen reader would read the title, counterparty,
+  /// day label, and exact date as four disconnected fragments.
+  String _semanticLabel() {
+    final o = obligation;
+    final days = o.daysUntilAction(now);
+    final urgency = days < 0
+        ? '${-days} days overdue'
+        : days == 0
+            ? 'due today'
+            : 'due in $days days';
+    final parts = <String>[
+      o.title,
+      if (o.counterparty != null) o.counterparty!,
+      urgency,
+      o.category.label,
+      if (o.autoRenews) 'renews automatically unless cancelled',
+      if (o.noticeDaysAssumed) 'notice period assumed, may be inaccurate',
+    ];
+    return parts.join('. ');
+  }
+
+  VoidCallback? _openActionSheet(BuildContext context) {
+    if (onTap == null) return null;
+    return () {
+      HapticFeedback.mediumImpact();
+      showObligationActionSheet(
+        context,
+        onEdit: () => onTap?.call(),
+        onSnooze: () => onSnooze?.call(),
+        onResolve: () => onResolve?.call(),
+        onDelete: () => onDelete?.call(),
+      );
+    };
   }
 
   Widget _tag(BuildContext context, String text) {

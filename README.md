@@ -184,4 +184,21 @@ Shipping worldwide from day one means the strictest rule applies everywhere.
       against Xcode's privacy report before App Store submission, and it
       still needs manually adding to the Runner target in Xcode (dropping
       a file into the folder doesn't add it to Copy Bundle Resources).
-- [ ] Accessibility pass
+- [x] Accessibility pass — computed actual WCAG contrast ratios rather than
+      eyeballing the palette; `Tone.inkMuted`/`Tone.inkFaint` measured
+      2.2:1 and 3.95:1 against paper (both fail AA outright for normal-
+      size text) and `Pressure.open` measured 2.6:1 (fails the 3:1
+      non-text minimum for a graphical indicator like the action window
+      bar). All three darkened to clear their respective bars, same hue.
+      Added screen-reader parity for what swipe-to-resolve/snooze can't
+      reach (VoiceOver/TalkBack claim the swipe gesture for their own
+      navigation) — custom semantic actions on each row, a merged
+      semantic label instead of several disconnected text fragments, and
+      labels on every icon-only control that had none (the FAB, bottom
+      nav, calendar day cells and month-nav arrows). Added
+      test/widget/text_scaling_test.dart at 1.5x text scale, which caught
+      two real overflow bugs: the bottom nav's labels outgrowing the bar
+      (now clamped to 1.15x — the same tradeoff iOS/Android's own tab
+      bars make, fixed chrome rather than scrolling content) and a tags
+      row that didn't wrap.
+

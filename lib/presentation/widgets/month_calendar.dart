@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 import '../../core/theme/theme.dart';
 import '../../core/theme/tokens.dart';
@@ -29,6 +30,15 @@ class MonthCalendar extends StatelessWidget {
   final ValueChanged<int> onSelectDay;
 
   static const _weekdayLabels = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+  static const _weekdayFullNames = [
+    'Monday',
+    'Tuesday',
+    'Wednesday',
+    'Thursday',
+    'Friday',
+    'Saturday',
+    'Sunday',
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -42,10 +52,17 @@ class MonthCalendar extends StatelessWidget {
       children: [
         Row(
           children: [
-            for (final l in _weekdayLabels)
+            for (var i = 0; i < _weekdayLabels.length; i++)
               Expanded(
                 child: Center(
-                  child: Text(l, style: Type.eyebrow(tone.inkFaint)),
+                  child: Semantics(
+                    label: _weekdayFullNames[i],
+                    excludeSemantics: true,
+                    child: Text(
+                      _weekdayLabels[i],
+                      style: Type.eyebrow(tone.inkMuted),
+                    ),
+                  ),
                 ),
               ),
           ],
@@ -71,11 +88,27 @@ class MonthCalendar extends StatelessWidget {
               isSelected: selectedDay == day,
               now: now,
               onTap: () => onSelectDay(day),
+              semanticLabel: _dayLabel(
+                DateTime(month.year, month.month, day),
+                items.length,
+                isToday: isCurrentMonth && now.day == day,
+              ),
             );
           },
         ),
       ],
     );
+  }
+
+  static String _dayLabel(DateTime date, int count, {required bool isToday}) {
+    final formatted = DateFormat.MMMMd().format(date);
+    final today = isToday ? ', today' : '';
+    final due = count == 0
+        ? 'nothing due'
+        : count == 1
+            ? '1 obligation due'
+            : '$count obligations due';
+    return '$formatted$today, $due';
   }
 }
 
@@ -87,6 +120,7 @@ class _DayCell extends StatelessWidget {
     required this.isSelected,
     required this.now,
     required this.onTap,
+    required this.semanticLabel,
   });
 
   final int day;
@@ -95,6 +129,7 @@ class _DayCell extends StatelessWidget {
   final bool isSelected;
   final DateTime now;
   final VoidCallback onTap;
+  final String semanticLabel;
 
   @override
   Widget build(BuildContext context) {
@@ -103,43 +138,48 @@ class _DayCell extends StatelessWidget {
 
     Color? dotColor;
     if (items.isNotEmpty) {
-      final maxPressure = items
-          .map((o) => o.pressureAt(now))
-          .reduce((a, b) => a > b ? a : b);
+      final maxPressure =
+          items.map((o) => o.pressureAt(now)).reduce((a, b) => a > b ? a : b);
       dotColor = Pressure.at(maxPressure);
     }
 
-    return Pressable(
-      onTap: onTap,
-      child: AspectRatio(
-        aspectRatio: 1,
-        child: Container(
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: isSelected ? tone.ink : Colors.transparent,
-            shape: BoxShape.circle,
-            border: isToday && !isSelected
-                ? Border.all(color: tone.ink, width: 1.5)
-                : null,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text('$day', style: Type.numeric(numberColor)),
-              const SizedBox(height: 2),
-              SizedBox(
-                width: 5,
-                height: 5,
-                child: dotColor == null
-                    ? null
-                    : DecoratedBox(
-                        decoration: BoxDecoration(
-                          color: dotColor,
-                          shape: BoxShape.circle,
+    return Semantics(
+      label: semanticLabel,
+      button: true,
+      selected: isSelected,
+      excludeSemantics: true,
+      child: Pressable(
+        onTap: onTap,
+        child: AspectRatio(
+          aspectRatio: 1,
+          child: Container(
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: isSelected ? tone.ink : Colors.transparent,
+              shape: BoxShape.circle,
+              border: isToday && !isSelected
+                  ? Border.all(color: tone.ink, width: 1.5)
+                  : null,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text('$day', style: Type.numeric(numberColor)),
+                const SizedBox(height: 2),
+                SizedBox(
+                  width: 5,
+                  height: 5,
+                  child: dotColor == null
+                      ? null
+                      : DecoratedBox(
+                          decoration: BoxDecoration(
+                            color: dotColor,
+                            shape: BoxShape.circle,
+                          ),
                         ),
-                      ),
-              ),
-            ],
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -173,12 +213,14 @@ class MonthNav extends StatelessWidget {
       children: [
         _NavArrow(
           icon: CupertinoIcons.chevron_left,
+          label: 'Previous month',
           enabled: canGoBack,
           onTap: onBack,
         ),
         Text(label, style: Type.heading(tone.ink)),
         _NavArrow(
           icon: CupertinoIcons.chevron_right,
+          label: 'Next month',
           enabled: canGoForward,
           onTap: onForward,
         ),
@@ -190,25 +232,33 @@ class MonthNav extends StatelessWidget {
 class _NavArrow extends StatelessWidget {
   const _NavArrow({
     required this.icon,
+    required this.label,
     required this.enabled,
     required this.onTap,
   });
 
   final IconData icon;
+  final String label;
   final bool enabled;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final tone = context.tone;
-    return Pressable(
-      onTap: enabled ? onTap : null,
-      child: Padding(
-        padding: const EdgeInsets.all(Space.sm),
-        child: Icon(
-          icon,
-          size: 20,
-          color: enabled ? tone.ink : tone.inkFaint,
+    return Semantics(
+      button: true,
+      label: label,
+      enabled: enabled,
+      excludeSemantics: true,
+      child: Pressable(
+        onTap: enabled ? onTap : null,
+        child: Padding(
+          padding: const EdgeInsets.all(Space.sm),
+          child: Icon(
+            icon,
+            size: 20,
+            color: enabled ? tone.ink : tone.inkFaint,
+          ),
         ),
       ),
     );

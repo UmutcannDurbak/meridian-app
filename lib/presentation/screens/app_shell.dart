@@ -47,35 +47,44 @@ class _AppShellState extends State<AppShell> {
         shape: const CircularNotchedRectangle(),
         notchMargin: Space.sm,
         color: tone.surface,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            _NavButton(
-              icon: CupertinoIcons.list_bullet,
-              label: 'Horizon',
-              selected: _index == 0,
-              onTap: () => setState(() => _index = 0),
-            ),
-            _NavButton(
-              icon: CupertinoIcons.calendar,
-              label: 'Timeline',
-              selected: _index == 1,
-              onTap: () => setState(() => _index = 1),
-            ),
-            const SizedBox(width: Space.xxl),
-            _NavButton(
-              icon: CupertinoIcons.chart_bar_square,
-              label: 'Exposure',
-              selected: _index == 2,
-              onTap: () => setState(() => _index = 2),
-            ),
-            _NavButton(
-              icon: CupertinoIcons.gear_alt,
-              label: 'Settings',
-              selected: _index == 3,
-              onTap: () => setState(() => _index = 3),
-            ),
-          ],
+        // Clamped, not left to scale freely like everything else in the
+        // app: this bar has a fixed height, and at a large accessibility
+        // text size the label under each icon overflowed it (found via
+        // test/widget/text_scaling_test.dart). iOS and Android's own tab
+        // bars make the same tradeoff for the same reason — fixed chrome,
+        // not scrolling content.
+        child: MediaQuery.withClampedTextScaling(
+          maxScaleFactor: 1.15,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              _NavButton(
+                icon: CupertinoIcons.list_bullet,
+                label: 'Horizon',
+                selected: _index == 0,
+                onTap: () => setState(() => _index = 0),
+              ),
+              _NavButton(
+                icon: CupertinoIcons.calendar,
+                label: 'Timeline',
+                selected: _index == 1,
+                onTap: () => setState(() => _index = 1),
+              ),
+              const SizedBox(width: Space.xxl),
+              _NavButton(
+                icon: CupertinoIcons.chart_bar_square,
+                label: 'Exposure',
+                selected: _index == 2,
+                onTap: () => setState(() => _index = 2),
+              ),
+              _NavButton(
+                icon: CupertinoIcons.gear_alt,
+                label: 'Settings',
+                selected: _index == 3,
+                onTap: () => setState(() => _index = 3),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -93,18 +102,23 @@ class _CaptureButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tone = context.tone;
-    return Pressable(
-      onTap: onTap,
-      scale: 0.92,
-      child: Container(
-        width: 56,
-        height: 56,
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          color: tone.ink,
-          borderRadius: BorderRadius.circular(Radii.lg),
+    return Semantics(
+      button: true,
+      label: 'Add an obligation',
+      excludeSemantics: true,
+      child: Pressable(
+        onTap: onTap,
+        scale: 0.92,
+        child: Container(
+          width: 56,
+          height: 56,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: tone.ink,
+            borderRadius: BorderRadius.circular(Radii.lg),
+          ),
+          child: Icon(CupertinoIcons.add, color: tone.paper, size: 26),
         ),
-        child: Icon(CupertinoIcons.add, color: tone.paper, size: 26),
       ),
     );
   }
@@ -127,20 +141,26 @@ class _NavButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final tone = context.tone;
     final color = selected ? tone.ink : tone.inkFaint;
-    return Pressable(
-      onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: Space.sm,
-          vertical: Space.xs,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, color: color, size: 22),
-            const SizedBox(height: Space.xxs),
-            Text(label, style: Type.eyebrow(color)),
-          ],
+    return Semantics(
+      button: true,
+      selected: selected,
+      label: label,
+      excludeSemantics: true,
+      child: Pressable(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: Space.sm,
+            vertical: Space.xs,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, color: color, size: 22),
+              const SizedBox(height: Space.xxs),
+              Text(label, style: Type.eyebrow(color)),
+            ],
+          ),
         ),
       ),
     );
