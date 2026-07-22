@@ -150,7 +150,11 @@ Shipping worldwide from day one means the strictest rule applies everywhere.
       destination now that it has real content
 - [ ] Auth — Sign in with Apple, in-app account deletion
 - [ ] Capture: email forwarding, share extension, templates
-- [ ] Notifications wiring, server-side scheduling
+- [x] Notifications — local, on-device scheduling wired to AlertScheduler
+      (NotificationPlanner turns the obligation list into a flat, idempotent
+      set of platform notifications; reconciled on every list change and app
+      start). No server-side scheduling yet — nothing to push to a
+      backgrounded/killed app until one exists.
 - [ ] Delegation
 - [ ] Payments — RevenueCat, server entitlements, region-aware paywall
 - [ ] Privacy manifest audit across all dependencies

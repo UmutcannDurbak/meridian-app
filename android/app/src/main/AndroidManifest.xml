@@ -1,6 +1,11 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <!-- App lock (FR-603) — BiometricPrompt via local_auth. -->
     <uses-permission android:name="android.permission.USE_BIOMETRIC"/>
+    <!-- Local notifications — Android 13+ requires this to be requested at
+         runtime too; declaring it here is what makes the runtime request
+         legal. Deliberately not requesting SCHEDULE_EXACT_ALARM — see
+         notification_channel_io.dart on why these are scheduled inexactly. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
     <application
         android:label="meridian"
         android:name="${applicationName}"

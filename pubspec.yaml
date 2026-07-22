@@ -45,8 +45,12 @@ dependencies:
   # validation and entitlement management.
   purchases_flutter: ^8.0.0
 
-  # Notifications
+  # Notifications. flutter_timezone reads the device's IANA zone name so
+  # zonedSchedule fires at the right wall-clock time — without it the
+  # timezone package defaults local to UTC.
   flutter_local_notifications: ^17.2.2
+  timezone: ^0.9.4
+  flutter_timezone: ^5.1.0
 
   meta: ^1.15.0
   uuid: ^4.4.2

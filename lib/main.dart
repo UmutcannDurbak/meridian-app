@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/theme/theme.dart';
 import 'presentation/screens/app_lock_gate.dart';
 import 'presentation/screens/app_shell.dart';
+import 'presentation/screens/notification_scheduler.dart';
 
 void main() {
   // obligationRepositoryProvider self-constructs its backing store on first
@@ -39,7 +40,9 @@ class MeridianApp extends StatelessWidget {
         Locale('fr'),
         Locale('es'),
       ],
-      home: const AppLockGate(child: AppShell()),
+      home: const AppLockGate(
+        child: NotificationScheduler(child: AppShell()),
+      ),
     );
   }
 }
