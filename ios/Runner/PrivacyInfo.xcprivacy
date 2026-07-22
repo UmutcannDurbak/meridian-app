@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!--
+	This app does not track users and, as of this pass, transmits nothing
+	off-device at all — there is no backend yet (see README's "Privacy
+	architecture" section and roadmap). Revisit NSPrivacyCollectedDataTypes
+	the day sync/auth/payments actually start sending data somewhere; an
+	empty array is only true today.
+	-->
+	<key>NSPrivacyTracking</key>
+	<false/>
+	<key>NSPrivacyTrackingDomains</key>
+	<array/>
+	<key>NSPrivacyCollectedDataTypes</key>
+	<array/>
+
+	<!--
+	Required-reason API declarations for the "Required Reason API" categories
+	Apple scans compiled binaries for at App Store Connect upload. This
+	covers what this app's own code and its direct dependencies are known to
+	touch (path_provider, drift/sqlite3, and flutter_secure_storage all read
+	file metadata inside the app's own container to manage the local
+	database and app-lock preference — see data/local/).
+
+	IMPORTANT: this was written without Xcode/macOS access (this environment
+	has neither), so it could not be verified against Xcode's own privacy
+	report, which is the authoritative source — it inspects the actual
+	compiled binary, including every transitive dependency, not just what's
+	read here in source. Before submitting to App Store Connect: build an
+	archive in Xcode and check Product > Generate Privacy Report (or the
+	automated check that runs on upload) for anything this manifest is
+	missing, most likely from a plugin's own compiled SDK rather than from
+	this app's code.
+	-->
+	<key>NSPrivacyAccessedAPITypes</key>
+	<array>
+		<dict>
+			<key>NSPrivacyAccessedAPIType</key>
+			<string>NSPrivacyAccessedAPICategoryFileTimestamp</string>
+			<key>NSPrivacyAccessedAPITypeReasons</key>
+			<array>
+				<!-- C617.1: access timestamps/size/metadata of files inside
+				     the app container — the sqlite database and any files
+				     path_provider resolves paths for. -->
+				<string>C617.1</string>
+			</array>
+		</dict>
+		<dict>
+			<key>NSPrivacyAccessedAPIType</key>
+			<string>NSPrivacyAccessedAPICategoryDiskSpace</string>
+			<key>NSPrivacyAccessedAPITypeReasons</key>
+			<array>
+				<!-- E174.1: check available disk space before writing a
+				     file, to display space information to the user, or to
+				     determine if there is sufficient disk space to
+				     complete a file operation — sqlite3 checks free space
+				     before writing. -->
+				<string>E174.1</string>
+			</array>
+		</dict>
+	</array>
+</dict>
+</plist>

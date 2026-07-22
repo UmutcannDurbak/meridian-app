@@ -28,6 +28,10 @@
 	<true/>
 	<key>NSFaceIDUsageDescription</key>
 	<string>Meridian locks itself with Face ID to keep your contracts and financial details private.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Meridian uses the camera to photograph a contract or renewal notice so it can read the details on-device. The photo is never uploaded.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Meridian reads a photo you choose so it can extract contract details on-device. The photo is never uploaded.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

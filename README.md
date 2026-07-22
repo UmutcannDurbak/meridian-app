@@ -170,5 +170,18 @@ Shipping worldwide from day one means the strictest rule applies everywhere.
       backgrounded/killed app until one exists.
 - [ ] Delegation
 - [ ] Payments — RevenueCat, server entitlements, region-aware paywall
-- [ ] Privacy manifest audit across all dependencies
+- [x] Privacy manifest audit — `ios/Runner/PrivacyInfo.xcprivacy` added
+      (NSPrivacyTracking: false, no collected data types — true today since
+      nothing leaves the device at all yet, revisit the day sync/auth/
+      payments actually transmit something). Found and fixed a real bug in
+      the process: `Info.plist` was missing `NSCameraUsageDescription` /
+      `NSPhotoLibraryUsageDescription` — the scan flow's "Take photo" would
+      have crashed on a real device. Audited both manifests against actual
+      dependency usage: no unused permissions, no INTERNET permission
+      leaking in from an unused dependency (dio, purchases_flutter are
+      declared but not yet called anywhere). Written without Xcode/macOS
+      access — see the file's own comments for what still needs verifying
+      against Xcode's privacy report before App Store submission, and it
+      still needs manually adding to the Runner target in Xcode (dropping
+      a file into the folder doesn't add it to Copy Bundle Resources).
 - [ ] Accessibility pass
