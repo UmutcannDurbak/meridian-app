@@ -6,14 +6,15 @@ import '../../core/theme/theme.dart';
 import '../../core/theme/tokens.dart';
 import '../../domain/entities/obligation.dart';
 import 'action_window_bar.dart';
+import 'obligation_action_sheet.dart';
 import 'pressable.dart';
 
 /// A single line in the Horizon.
 ///
 /// The most frequent interaction in the product is resolving or deferring from
-/// this row without opening anything. If a user has to navigate to a detail
-/// screen to clear an item, the product feels like work — which for this
-/// audience is fatal. Hence swipe actions on every row.
+/// this row without opening anything, so swipe covers those two. Everything
+/// else a row can do — edit, delete — lives one long-press away in
+/// [showObligationActionSheet] rather than crowding the row itself.
 class ObligationRow extends StatelessWidget {
   const ObligationRow({
     super.key,
@@ -22,6 +23,7 @@ class ObligationRow extends StatelessWidget {
     this.onTap,
     this.onResolve,
     this.onSnooze,
+    this.onDelete,
   });
 
   final Obligation obligation;
@@ -29,6 +31,7 @@ class ObligationRow extends StatelessWidget {
   final VoidCallback? onTap;
   final VoidCallback? onResolve;
   final VoidCallback? onSnooze;
+  final VoidCallback? onDelete;
 
   @override
   Widget build(BuildContext context) {
@@ -70,6 +73,18 @@ class ObligationRow extends StatelessWidget {
       },
       child: Pressable(
         onTap: onTap,
+        onLongPress: onTap == null
+            ? null
+            : () {
+                HapticFeedback.mediumImpact();
+                showObligationActionSheet(
+                  context,
+                  onEdit: () => onTap?.call(),
+                  onSnooze: () => onSnooze?.call(),
+                  onResolve: () => onResolve?.call(),
+                  onDelete: () => onDelete?.call(),
+                );
+              },
         child: Container(
           padding: const EdgeInsets.all(Space.md),
           decoration: BoxDecoration(

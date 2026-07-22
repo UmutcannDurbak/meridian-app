@@ -82,6 +82,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                         onResolve: () => repo.resolve(o.id),
                         onSnooze: () =>
                             repo.snooze(o.id, const Duration(days: 7)),
+                        onDelete: () => repo.delete(o.id),
                       );
                     },
                   ),

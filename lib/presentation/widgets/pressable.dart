@@ -16,11 +16,13 @@ class Pressable extends StatefulWidget {
     super.key,
     required this.onTap,
     required this.child,
+    this.onLongPress,
     this.borderRadius,
     this.scale = 0.97,
   });
 
   final VoidCallback? onTap;
+  final VoidCallback? onLongPress;
   final Widget child;
   final BorderRadius? borderRadius;
   final double scale;
@@ -42,6 +44,7 @@ class _PressableState extends State<Pressable> {
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: widget.onTap,
+      onLongPress: widget.onLongPress,
       onTapDown: (_) => _set(true),
       onTapUp: (_) => _set(false),
       onTapCancel: () => _set(false),

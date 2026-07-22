@@ -3,11 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../data/repositories/repository_provider.dart';
 import '../domain/entities/obligation.dart';
 import '../domain/services/exposure_service.dart';
+import '../domain/services/obligation_stats.dart';
 import '../domain/services/timeline_service.dart';
 
 export '../data/repositories/repository_provider.dart'
     show obligationRepositoryProvider;
 export '../domain/services/exposure_service.dart' show MonthExposure;
+export '../domain/services/obligation_stats.dart' show ObligationStats;
 export '../domain/services/timeline_service.dart' show MonthBucket;
 
 /// Injected clock. Never call DateTime.now() outside this provider — it
@@ -89,4 +91,11 @@ final timelineMonthsProvider = Provider<List<MonthBucket>>((ref) {
 /// Exposure screen.
 final exposureMonthsProvider = Provider<List<MonthExposure>>((ref) {
   return ExposureService.fromBuckets(ref.watch(timelineMonthsProvider));
+});
+
+/// Counts behind the Timeline screen's stats header.
+final obligationStatsProvider = Provider<ObligationStats>((ref) {
+  final now = ref.watch(nowProvider);
+  final all = ref.watch(obligationListProvider).valueOrNull ?? const [];
+  return ObligationStatsService.compute(all, now);
 });
