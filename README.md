@@ -76,13 +76,17 @@ keeps the date logic, which is the risky part of this product, unit-testable.
 The product's core promise is that contracts do not leave the device.
 
 ```
-photo/PDF ──► Vision OCR (on-device)
-                    │
-                    ├─ iOS 26 + Apple Intelligence
-                    │     └─► Foundation Models structured extraction (on-device)
-                    │
-                    └─ otherwise
-                          └─► NSDataDetector + pattern heuristics (on-device)
+photo/PDF ──┬─► iOS: Vision OCR (on-device)
+            │         │
+            │         ├─ iOS 26 + Apple Intelligence
+            │         │     └─► Foundation Models structured extraction (on-device)
+            │         │
+            │         └─ otherwise
+            │               └─► NSDataDetector + pattern heuristics (on-device)
+            │
+            └─► Android: ML Kit text recognition (on-device, bundled model)
+                          └─► pattern heuristics (on-device) — no on-device-model
+                              tier exists on this platform yet
                                         │
                                         ▼
                             metadata only ──► encrypted sync
@@ -90,8 +94,9 @@ photo/PDF ──► Vision OCR (on-device)
 ```
 
 No network call exists on either side of the extraction channel. This is
-verifiable by reading `ios/Runner/DocumentExtraction.swift`, and that
-verifiability is the point — this audience will ask.
+verifiable by reading `ios/Runner/DocumentExtraction.swift` and
+`android/app/src/main/kotlin/com/meridian/meridian/DocumentExtraction.kt`,
+and that verifiability is the point — this audience will ask.
 
 The capability tier is reported to the UI and shown to the user. Do not hide
 it. Someone who believes they have AI extraction but silently gets regex will

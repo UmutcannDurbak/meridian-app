@@ -49,6 +49,12 @@ kotlin {
 
 dependencies {
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
+    // On-device OCR for document capture (DocumentExtraction.kt) — the
+    // bundled-model artifact, not play-services-mlkit-text-recognition,
+    // so the model ships with the app rather than downloading on first use.
+    // Matches the privacy contract in DocumentExtraction.swift: no network
+    // call happens during a scan.
+    implementation("com.google.mlkit:text-recognition:16.0.1")
 }
 
 flutter {

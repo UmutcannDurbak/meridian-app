@@ -16,7 +16,7 @@ class ExtractionCapabilities {
   /// a vague answer costs more trust than an honest limitation.
   String get disclosure => onDeviceModel
       ? 'Read on this device. The document is not uploaded.'
-      : 'Text read on this device. Your iPhone does not support on-device '
+      : 'Text read on this device. This device does not support on-device '
           'AI extraction, so some fields may need completing by hand. The '
           'document is still not uploaded.';
 }
