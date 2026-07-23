@@ -27,10 +27,18 @@ subprojects {
 // metadata check fails on whichever plugin hasn't caught up yet. Rather than
 // wait on each plugin's own release cadence, force every Android library
 // module in the build to compile against the same SDK :app already does.
+//
+// Must be wrapped in afterEvaluate: subprojects {} content configures each
+// subproject BEFORE that subproject's own build.gradle finishes running, so
+// without this, the plugin's own (lower) compileSdk was being applied AFTER
+// ours and silently winning — same failure, same plugin, even with this
+// block present but unwrapped.
 subprojects {
-    plugins.withId("com.android.library") {
-        extensions.configure<com.android.build.gradle.LibraryExtension> {
-            compileSdk = 36
+    afterEvaluate {
+        plugins.withId("com.android.library") {
+            extensions.configure<com.android.build.gradle.LibraryExtension> {
+                compileSdk = 36
+            }
         }
     }
 }
