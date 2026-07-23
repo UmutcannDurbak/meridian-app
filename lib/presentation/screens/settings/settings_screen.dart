@@ -3,41 +3,22 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../application/app_lock_providers.dart';
+import '../../../core/l10n/app_strings.dart';
 import '../../../core/theme/theme.dart';
 import '../../../core/theme/tokens.dart';
+import '../onboarding/onboarding_flow.dart';
 
 /// Deliberately small. There's nowhere else in the app yet for account,
 /// export, or delegation settings to belong to — those need auth first.
 /// The one thing that genuinely lives here today is the app lock toggle.
-class SettingsScreen extends ConsumerStatefulWidget {
+class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
 
   @override
-  ConsumerState<SettingsScreen> createState() => _SettingsScreenState();
-}
-
-class _SettingsScreenState extends ConsumerState<SettingsScreen> {
-  bool? _lockEnabled;
-
-  @override
-  void initState() {
-    super.initState();
-    _load();
-  }
-
-  Future<void> _load() async {
-    final enabled = await ref.read(appLockPreferenceProvider).isEnabled();
-    if (mounted) setState(() => _lockEnabled = enabled);
-  }
-
-  Future<void> _setLockEnabled(bool value) async {
-    setState(() => _lockEnabled = value);
-    await ref.read(appLockPreferenceProvider).setEnabled(value);
-  }
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final tone = context.tone;
+    final s = AppStrings.of(context);
+    final lockEnabled = ref.watch(appLockEnabledProvider);
     return ListView(
       padding: const EdgeInsets.fromLTRB(
         Space.md,
@@ -46,9 +27,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         Space.huge,
       ),
       children: [
-        Text('Settings', style: Type.display(tone.ink)),
+        Text(s.settingsTitle, style: Type.display(tone.ink)),
         const SizedBox(height: Space.xl),
-        Text('SECURITY', style: Type.eyebrow(tone.inkMuted)),
+        Text(s.sectionSecurity, style: Type.eyebrow(tone.inkMuted)),
         const SizedBox(height: Space.sm),
         Container(
           padding: const EdgeInsets.all(Space.md),
@@ -79,29 +60,26 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'Require Face ID / biometric unlock',
-                      style: Type.heading(tone.ink),
-                    ),
+                    Text(s.lockTitle, style: Type.heading(tone.ink)),
                     const SizedBox(height: Space.xxs),
-                    Text(
-                      'Recommended — this app holds contracts and financial '
-                      'details.',
-                      style: Type.label(tone.inkMuted),
-                    ),
+                    Text(s.lockSubtitle, style: Type.label(tone.inkMuted)),
                   ],
                 ),
               ),
               const SizedBox(width: Space.sm),
               Switch.adaptive(
-                value: _lockEnabled ?? true,
-                onChanged: _lockEnabled == null ? null : _setLockEnabled,
+                value: lockEnabled,
+                onChanged: ref.read(appLockEnabledProvider.notifier).setEnabled,
               ),
             ],
           ),
         ),
         const SizedBox(height: Space.xl),
-        Text('ABOUT', style: Type.eyebrow(tone.inkMuted)),
+        Text(s.sectionHelp, style: Type.eyebrow(tone.inkMuted)),
+        const SizedBox(height: Space.sm),
+        const OnboardingReplayTile(),
+        const SizedBox(height: Space.xl),
+        Text(s.sectionAbout, style: Type.eyebrow(tone.inkMuted)),
         const SizedBox(height: Space.sm),
         Container(
           padding: const EdgeInsets.all(Space.md),

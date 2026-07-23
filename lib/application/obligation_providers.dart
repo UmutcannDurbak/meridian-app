@@ -23,15 +23,30 @@ final obligationListProvider = StreamProvider<List<Obligation>>((ref) {
   return ref.watch(obligationRepositoryProvider).watchAll();
 });
 
+enum HorizonGroupKind { overdue, thisWeek, thisMonth }
+
 class HorizonGroup {
-  const HorizonGroup(this.label, this.items);
-  final String label;
+  const HorizonGroup(this.kind, this.items);
+  final HorizonGroupKind kind;
   final List<Obligation> items;
 }
+
+/// The window Horizon (the home screen) actually surfaces. Beyond this,
+/// an obligation is real but not imminent — Timeline's job, not Horizon's.
+/// See [horizonGroupsProvider] for why the cutoff exists at all.
+const horizonWindowDays = 31;
 
 /// Groups by urgency, not by date. Empty groups are dropped entirely — a
 /// section header with nothing under it is noise on a screen whose whole
 /// purpose is reducing noise.
+///
+/// Deliberately capped at [horizonWindowDays]: this is "what needs me now",
+/// not a second copy of every obligation on file. Dumping something due in
+/// 11 months under a catch-all "Later" heading buries the handful of things
+/// that are actually close, which defeats the point of a prioritised list.
+/// Anything past the cutoff still exists — it's one tap away via Timeline,
+/// surfaced through [horizonOverflowCountProvider] — it just doesn't
+/// compete for space with what's actually due soon.
 final horizonGroupsProvider = Provider<List<HorizonGroup>>((ref) {
   final now = ref.watch(nowProvider);
   final all = ref.watch(obligationListProvider).valueOrNull ?? const [];
@@ -41,7 +56,8 @@ final horizonGroupsProvider = Provider<List<HorizonGroup>>((ref) {
         (o) =>
             o.status != ObligationStatus.resolved &&
             o.status != ObligationStatus.dismissed &&
-            o.status != ObligationStatus.draft,
+            o.status != ObligationStatus.draft &&
+            !o.isSnoozed(now),
       )
       .toList()
     ..sort((a, b) => a.actionDeadline.compareTo(b.actionDeadline));
@@ -49,7 +65,6 @@ final horizonGroupsProvider = Provider<List<HorizonGroup>>((ref) {
   final overdue = <Obligation>[];
   final week = <Obligation>[];
   final month = <Obligation>[];
-  final later = <Obligation>[];
 
   for (final o in live) {
     final d = o.daysUntilAction(now);
@@ -57,19 +72,31 @@ final horizonGroupsProvider = Provider<List<HorizonGroup>>((ref) {
       overdue.add(o);
     } else if (d <= 7) {
       week.add(o);
-    } else if (d <= 31) {
+    } else if (d <= horizonWindowDays) {
       month.add(o);
-    } else {
-      later.add(o);
     }
   }
 
   return [
-    if (overdue.isNotEmpty) HorizonGroup('Overdue', overdue),
-    if (week.isNotEmpty) HorizonGroup('This week', week),
-    if (month.isNotEmpty) HorizonGroup('This month', month),
-    if (later.isNotEmpty) HorizonGroup('Later', later),
+    if (overdue.isNotEmpty) HorizonGroup(HorizonGroupKind.overdue, overdue),
+    if (week.isNotEmpty) HorizonGroup(HorizonGroupKind.thisWeek, week),
+    if (month.isNotEmpty) HorizonGroup(HorizonGroupKind.thisMonth, month),
   ];
+});
+
+/// Count of live, non-snoozed obligations due beyond [horizonWindowDays] —
+/// real, but intentionally left off Horizon. Drives the "N more upcoming"
+/// link to Timeline so they're not simply lost.
+final horizonOverflowCountProvider = Provider<int>((ref) {
+  final now = ref.watch(nowProvider);
+  final all = ref.watch(obligationListProvider).valueOrNull ?? const [];
+  return all.where((o) {
+    return o.status != ObligationStatus.resolved &&
+        o.status != ObligationStatus.dismissed &&
+        o.status != ObligationStatus.draft &&
+        !o.isSnoozed(now) &&
+        o.daysUntilAction(now) > horizonWindowDays;
+  }).length;
 });
 
 /// Unconfirmed drafts awaiting review. Never alerted, never auto-deleted,

@@ -47,17 +47,26 @@ class _AppLockGateState extends ConsumerState<AppLockGate>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
+    // Read fresh rather than trusting whatever was true at initState — the
+    // whole point is that a toggle made in Settings since then must be
+    // honoured on this very pause/resume, not just after a restart.
+    final lockEnabled = ref.read(appLockEnabledProvider);
     if (state == AppLifecycleState.paused && _state == _LockState.unlocked) {
-      setState(() => _state = _LockState.locked);
+      if (lockEnabled) setState(() => _state = _LockState.locked);
     } else if (state == AppLifecycleState.resumed &&
         _state == _LockState.locked) {
-      _unlock();
+      if (lockEnabled) {
+        _unlock();
+      } else {
+        setState(() => _state = _LockState.unlocked);
+      }
     }
   }
 
   Future<void> _evaluate() async {
     try {
-      final enabled = await ref.read(appLockPreferenceProvider).isEnabled();
+      final enabled =
+          await ref.read(appLockEnabledProvider.notifier).ensureLoaded();
       if (!enabled) {
         if (mounted) setState(() => _state = _LockState.unlocked);
         return;

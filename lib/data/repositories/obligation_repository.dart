@@ -79,15 +79,12 @@ class ObligationRepository implements ObligationRepositoryBase {
 
   @override
   Future<void> snooze(String id, Duration by) async {
-    final row = await (_db.select(_db.obligationRows)
-          ..where((t) => t.id.equals(id)))
-        .getSingleOrNull();
-    if (row == null) return;
+    final now = DateTime.now();
     await (_db.update(_db.obligationRows)..where((t) => t.id.equals(id)))
         .write(
       ObligationRowsCompanion(
-        expiryDate: Value(row.expiryDate.add(by)),
-        updatedAt: Value(DateTime.now()),
+        snoozedUntil: Value(now.add(by)),
+        updatedAt: Value(now),
       ),
     );
   }
@@ -121,6 +118,7 @@ class ObligationRepository implements ObligationRepositoryBase {
       createdVia: Value(o.createdVia.name),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
+      snoozedUntil: Value(o.snoozedUntil),
     );
   }
 
@@ -175,6 +173,7 @@ class ObligationRepository implements ObligationRepositoryBase {
         r.createdVia,
         CaptureSource.manual,
       ),
+      snoozedUntil: r.snoozedUntil,
     );
   }
 

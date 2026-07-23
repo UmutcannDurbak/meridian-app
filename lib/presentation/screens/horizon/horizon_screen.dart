@@ -2,7 +2,9 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../application/navigation_providers.dart';
 import '../../../application/obligation_providers.dart';
+import '../../../core/l10n/app_strings.dart';
 import '../../../core/theme/theme.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../domain/entities/obligation.dart';
@@ -28,8 +30,8 @@ class HorizonScreen extends ConsumerWidget {
 
     return asyncAll.when(
       loading: () => const _HorizonSkeleton(),
-      error: (error, stack) => const _ErrorState(
-        message: 'Could not load your obligations.',
+      error: (error, stack) => _ErrorState(
+        message: AppStrings.of(context).errorLoad,
       ),
       data: (_) => const _HorizonList(),
     );
@@ -42,12 +44,16 @@ class _HorizonList extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final tone = context.tone;
+    final s = AppStrings.of(context);
     final grouped = ref.watch(horizonGroupsProvider);
+    final overflowCount = ref.watch(horizonOverflowCountProvider);
     final drafts = ref.watch(draftListProvider);
     final now = ref.watch(nowProvider);
     final repo = ref.watch(obligationRepositoryProvider);
 
-    if (grouped.isEmpty && drafts.isEmpty) return const _Empty();
+    if (grouped.isEmpty && drafts.isEmpty && overflowCount == 0) {
+      return const _Empty();
+    }
 
     return CustomScrollView(
       physics: const BouncingScrollPhysics(),
@@ -63,10 +69,10 @@ class _HorizonList extends ConsumerWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text('Horizon', style: Type.display(tone.ink)),
+                Text(s.horizonTitle, style: Type.display(tone.ink)),
                 IconButton(
                   icon: Icon(CupertinoIcons.search, color: tone.inkMuted),
-                  tooltip: 'Search',
+                  tooltip: s.searchTooltip,
                   onPressed: () => Navigator.of(context).push(
                     MaterialPageRoute<void>(
                       builder: (_) => const SearchScreen(),
@@ -86,7 +92,10 @@ class _HorizonList extends ConsumerWidget {
                 Space.md,
                 Space.md,
               ),
-              child: _DraftBanner(count: drafts.length, first: drafts.first),
+              child: _DraftBanner(
+                text: s.draftBanner(drafts.length, drafts.first.title),
+                first: drafts.first,
+              ),
             ),
           ),
         for (final group in grouped) ...[
@@ -102,7 +111,7 @@ class _HorizonList extends ConsumerWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    group.label.toUpperCase(),
+                    _groupLabel(s, group.kind).toUpperCase(),
                     style: Type.eyebrow(tone.inkMuted),
                   ),
                   Text(
@@ -136,8 +145,64 @@ class _HorizonList extends ConsumerWidget {
             ),
           ),
         ],
+        if (overflowCount > 0)
+          SliverPadding(
+            padding: const EdgeInsets.fromLTRB(
+              Space.md,
+              Space.lg,
+              Space.md,
+              0,
+            ),
+            sliver: SliverToBoxAdapter(
+              child: _OverflowLink(count: overflowCount),
+            ),
+          ),
         const SliverToBoxAdapter(child: SizedBox(height: Space.huge)),
       ],
+    );
+  }
+}
+
+String _groupLabel(AppStrings s, HorizonGroupKind kind) => switch (kind) {
+      HorizonGroupKind.overdue => s.groupOverdue,
+      HorizonGroupKind.thisWeek => s.groupThisWeek,
+      HorizonGroupKind.thisMonth => s.groupThisMonth,
+    };
+
+/// Points at what Horizon deliberately leaves off — obligations due beyond
+/// [horizonWindowDays] are real, just not imminent. See
+/// horizonOverflowCountProvider for why they're not just piled up here
+/// under a "Later" heading instead.
+class _OverflowLink extends ConsumerWidget {
+  const _OverflowLink({required this.count});
+  final int count;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final tone = context.tone;
+    final s = AppStrings.of(context);
+    return Pressable(
+      onTap: () => ref.read(selectedTabProvider.notifier).state = 1,
+      child: Container(
+        padding: const EdgeInsets.all(Space.md),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(Radii.md),
+          border: Border.all(color: tone.hairline),
+        ),
+        child: Row(
+          children: [
+            Icon(CupertinoIcons.calendar, size: 16, color: tone.inkMuted),
+            const SizedBox(width: Space.sm),
+            Expanded(
+              child: Text(
+                s.overflowLink(count),
+                style: Type.label(tone.inkMuted),
+              ),
+            ),
+            Icon(CupertinoIcons.chevron_right, size: 16, color: tone.inkFaint),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -146,8 +211,8 @@ class _HorizonList extends ConsumerWidget {
 /// treated as live obligations — but they also must not be forgotten. This
 /// is how a user finds their way back to one. See ObligationStatus.draft.
 class _DraftBanner extends StatelessWidget {
-  const _DraftBanner({required this.count, required this.first});
-  final int count;
+  const _DraftBanner({required this.text, required this.first});
+  final String text;
   final Obligation first;
 
   @override
@@ -184,12 +249,7 @@ class _DraftBanner extends StatelessWidget {
             ),
             const SizedBox(width: Space.sm),
             Expanded(
-              child: Text(
-                count == 1
-                    ? 'Draft ready — ${first.title.isEmpty ? "untitled" : first.title}'
-                    : '$count drafts awaiting review',
-                style: Type.label(tone.ink),
-              ),
+              child: Text(text, style: Type.label(tone.ink)),
             ),
             Icon(CupertinoIcons.chevron_right, size: 16, color: tone.inkFaint),
           ],
@@ -261,6 +321,7 @@ class _Empty extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tone = context.tone;
+    final s = AppStrings.of(context);
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(Space.xl),
@@ -284,14 +345,13 @@ class _Empty extends StatelessWidget {
             ),
             const SizedBox(height: Space.lg),
             Text(
-              'Nothing is waiting on you.',
+              s.emptyTitle,
               style: Type.title(tone.ink),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: Space.sm),
             Text(
-              'Add your first contract or renewal and Meridian will tell you '
-              'when you need to act — not when it is already too late.',
+              s.emptyBody,
               style: Type.body(tone.inkMuted),
               textAlign: TextAlign.center,
             ),

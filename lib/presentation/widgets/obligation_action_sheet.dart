@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
+import '../../core/l10n/app_strings.dart';
 import '../../core/theme/theme.dart';
 import '../../core/theme/tokens.dart';
 import 'pressable.dart';
@@ -45,6 +46,7 @@ class _ActionSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tone = context.tone;
+    final s = AppStrings.of(context);
     return SafeArea(
       child: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(Space.md, 0, Space.md, Space.lg),
@@ -54,7 +56,7 @@ class _ActionSheet extends StatelessWidget {
           children: [
             _Action(
               icon: CupertinoIcons.pencil,
-              title: 'Edit',
+              title: s.actionEdit,
               onTap: () {
                 Navigator.of(context).pop();
                 onEdit();
@@ -63,7 +65,7 @@ class _ActionSheet extends StatelessWidget {
             Divider(color: tone.hairline, height: Space.lg),
             _Action(
               icon: CupertinoIcons.clock,
-              title: 'Snooze 7 days',
+              title: s.actionSnooze7,
               onTap: () {
                 Navigator.of(context).pop();
                 onSnooze();
@@ -72,7 +74,7 @@ class _ActionSheet extends StatelessWidget {
             Divider(color: tone.hairline, height: Space.lg),
             _Action(
               icon: CupertinoIcons.checkmark_alt,
-              title: 'Resolve',
+              title: s.actionResolve,
               onTap: () {
                 Navigator.of(context).pop();
                 onResolve();
@@ -81,7 +83,7 @@ class _ActionSheet extends StatelessWidget {
             Divider(color: tone.hairline, height: Space.lg),
             _Action(
               icon: CupertinoIcons.trash,
-              title: 'Delete',
+              title: s.actionDelete,
               destructive: true,
               onTap: () async {
                 Navigator.of(context).pop();
@@ -97,23 +99,23 @@ class _ActionSheet extends StatelessWidget {
 
   Future<bool> _confirmDelete(BuildContext context) async {
     final tone = context.tone;
+    final s = AppStrings.of(context);
     final result = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Delete this obligation?'),
+        title: Text(s.deleteConfirmTitle),
         content: Text(
-          'This removes it and its scheduled alerts permanently. This '
-          'cannot be undone.',
+          s.deleteConfirmBody,
           style: Type.body(tone.inkMuted),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancel'),
+            child: Text(s.cancel),
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: Text('Delete', style: Type.heading(Pressure.closing)),
+            child: Text(s.actionDelete, style: Type.heading(Pressure.closing)),
           ),
         ],
       ),

@@ -110,7 +110,8 @@ void main() {
     expect(rowAfter.title, 'Domain renewal (renamed)');
   });
 
-  test('snooze advances the expiry date', () async {
+  test('snooze mutes the obligation without touching its real expiry date',
+      () async {
     await repo.upsert(
       Obligation(
         id: 'd1',
@@ -120,9 +121,16 @@ void main() {
       ),
     );
 
+    final before = DateTime.now();
     await repo.snooze('d1', const Duration(days: 7));
     final loaded = await repo.byId('d1');
-    expect(loaded?.expiryDate, DateTime(2026, 1, 17));
+
+    // The real deadline is untouched — snoozing must never silently rewrite
+    // when the thing itself is actually due.
+    expect(loaded?.expiryDate, DateTime(2026, 1, 10));
+    expect(loaded?.snoozedUntil, isNotNull);
+    expect(loaded!.isSnoozed(before.add(const Duration(days: 1))), isTrue);
+    expect(loaded.isSnoozed(before.add(const Duration(days: 8))), isFalse);
   });
 
   test('delete removes the row', () async {

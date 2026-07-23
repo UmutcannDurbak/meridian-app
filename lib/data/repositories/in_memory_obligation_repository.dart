@@ -125,7 +125,7 @@ class InMemoryObligationRepository implements ObligationRepositoryBase {
   Future<void> snooze(String id, Duration by) async {
     final o = _items[id];
     if (o == null) return;
-    _items[id] = o.copyWith(expiryDate: o.expiryDate.add(by));
+    _items[id] = o.copyWith(snoozedUntil: DateTime.now().add(by));
     _emit();
   }
 }

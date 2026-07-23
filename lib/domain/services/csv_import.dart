@@ -54,6 +54,10 @@ abstract final class CsvImportService {
     required List<List<Object?>> dataRows,
     required CsvColumnMapping mapping,
     required String Function() nextId,
+    // Used when a row has a value but no currency column/cell. Pure Dart
+    // domain code has no business guessing this from the device — the
+    // caller (which does know the device locale) decides.
+    String fallbackCurrency = 'USD',
   }) {
     final titleIdx = headers.indexOf(mapping.title);
     final dateIdx = headers.indexOf(mapping.expiryDate);
@@ -106,7 +110,7 @@ abstract final class CsvImportService {
             value: amount != null && amount > 0
                 ? Money(
                     (amount * 100).round(),
-                    currency.isEmpty ? 'USD' : currency.toUpperCase(),
+                    currency.isEmpty ? fallbackCurrency : currency.toUpperCase(),
                   )
                 : null,
             autoRenews: _parseBool(cell(autoRenewsIdx)),

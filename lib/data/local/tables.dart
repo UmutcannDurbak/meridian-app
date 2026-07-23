@@ -34,6 +34,11 @@ class ObligationRows extends Table {
   TextColumn get assigneeId => text().nullable()();
   TextColumn get notes => text().nullable()();
 
+  /// Set by a "Snooze" action; null means not currently snoozed. Deliberately
+  /// its own column rather than a shift of [expiryDate] — see
+  /// Obligation.snoozedUntil for why the two must never be conflated.
+  DateTimeColumn get snoozedUntil => dateTime().nullable()();
+
   /// Comma-joined attachment ids. A join table is unwarranted while every
   /// attachment belongs to exactly one obligation and there is no attachment
   /// entity of its own yet.

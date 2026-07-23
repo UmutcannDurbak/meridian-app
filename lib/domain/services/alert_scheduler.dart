@@ -34,7 +34,8 @@ abstract final class AlertScheduler {
   }) {
     if (o.status == ObligationStatus.draft ||
         o.status == ObligationStatus.resolved ||
-        o.status == ObligationStatus.dismissed) {
+        o.status == ObligationStatus.dismissed ||
+        o.isSnoozed(now)) {
       return const [];
     }
 

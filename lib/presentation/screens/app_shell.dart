@@ -1,6 +1,9 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../application/navigation_providers.dart';
+import '../../core/l10n/app_strings.dart';
 import '../../core/theme/theme.dart';
 import '../../core/theme/tokens.dart';
 import '../widgets/pressable.dart';
@@ -14,15 +17,11 @@ import 'timeline/timeline_screen.dart';
 /// Timeline, Exposure, Settings — plus capture as a centred, prominent
 /// action rather than a fifth tab, per the SRS: "Capture is centered and
 /// prominent; it is the highest-value action."
-class AppShell extends StatefulWidget {
+///
+/// The selected tab lives in [selectedTabProvider], not local state — other
+/// screens (Horizon's "view Timeline" link) need to switch tabs too.
+class AppShell extends ConsumerWidget {
   const AppShell({super.key});
-
-  @override
-  State<AppShell> createState() => _AppShellState();
-}
-
-class _AppShellState extends State<AppShell> {
-  int _index = 0;
 
   static const _screens = [
     HorizonScreen(),
@@ -32,14 +31,17 @@ class _AppShellState extends State<AppShell> {
   ];
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final tone = context.tone;
+    final s = AppStrings.of(context);
+    final index = ref.watch(selectedTabProvider);
     return Scaffold(
       body: SafeArea(
-        child: IndexedStack(index: _index, children: _screens),
+        child: IndexedStack(index: index, children: _screens),
       ),
       floatingActionButton: _CaptureButton(
         key: const Key('captureButton'),
+        semanticLabel: s.captureSemanticLabel,
         onTap: () => showCaptureSheet(context),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
@@ -60,28 +62,28 @@ class _AppShellState extends State<AppShell> {
             children: [
               _NavButton(
                 icon: CupertinoIcons.list_bullet,
-                label: 'Horizon',
-                selected: _index == 0,
-                onTap: () => setState(() => _index = 0),
+                label: s.navHorizon,
+                selected: index == 0,
+                onTap: () => ref.read(selectedTabProvider.notifier).state = 0,
               ),
               _NavButton(
                 icon: CupertinoIcons.calendar,
-                label: 'Timeline',
-                selected: _index == 1,
-                onTap: () => setState(() => _index = 1),
+                label: s.navTimeline,
+                selected: index == 1,
+                onTap: () => ref.read(selectedTabProvider.notifier).state = 1,
               ),
               const SizedBox(width: Space.xxl),
               _NavButton(
                 icon: CupertinoIcons.chart_bar_square,
-                label: 'Exposure',
-                selected: _index == 2,
-                onTap: () => setState(() => _index = 2),
+                label: s.navExposure,
+                selected: index == 2,
+                onTap: () => ref.read(selectedTabProvider.notifier).state = 2,
               ),
               _NavButton(
                 icon: CupertinoIcons.gear_alt,
-                label: 'Settings',
-                selected: _index == 3,
-                onTap: () => setState(() => _index = 3),
+                label: s.navSettings,
+                selected: index == 3,
+                onTap: () => ref.read(selectedTabProvider.notifier).state = 3,
               ),
             ],
           ),
@@ -96,15 +98,16 @@ class _AppShellState extends State<AppShell> {
 /// Rebuilding it on Pressable gives capture, the app's single most important
 /// tap target, the same real press feedback as everything else.
 class _CaptureButton extends StatelessWidget {
-  const _CaptureButton({super.key, required this.onTap});
+  const _CaptureButton({super.key, required this.onTap, required this.semanticLabel});
   final VoidCallback onTap;
+  final String semanticLabel;
 
   @override
   Widget build(BuildContext context) {
     final tone = context.tone;
     return Semantics(
       button: true,
-      label: 'Add an obligation',
+      label: semanticLabel,
       excludeSemantics: true,
       child: Pressable(
         onTap: onTap,

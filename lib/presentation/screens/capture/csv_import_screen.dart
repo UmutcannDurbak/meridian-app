@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../application/obligation_providers.dart';
+import '../../../core/locale/currency_defaults.dart';
 import '../../../core/theme/theme.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../domain/services/csv_import.dart';
@@ -145,6 +146,7 @@ class _CsvImportScreenState extends ConsumerState<CsvImportScreen> {
         autoRenews: _autoRenewsHeader,
       ),
       nextId: () => const Uuid().v4(),
+      fallbackCurrency: CurrencyDefaults.forDevice(),
     );
     setState(() {
       _rows = rows;

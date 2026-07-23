@@ -5,9 +5,11 @@ import 'package:intl/intl.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../application/obligation_providers.dart';
+import '../../../core/locale/currency_defaults.dart';
 import '../../../core/theme/theme.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../domain/entities/obligation.dart';
+import '../../../domain/services/recurrence_engine.dart';
 import '../../widgets/pressable.dart';
 
 /// Manual entry, draft review, and editing an existing obligation (e.g. from
@@ -60,6 +62,16 @@ class _ObligationFormScreenState extends ConsumerState<ObligationFormScreen> {
   late MoneyDirection _direction;
   late bool _autoRenews;
   late bool _detailsExpanded;
+  /// Currency for a value entered on this obligation. Whatever it already
+  /// has wins; a brand new obligation defaults to the device's own currency
+  /// rather than always assuming USD.
+  late String _currency;
+
+  /// Only meaningful, and only shown, while [_autoRenews] is on — how often
+  /// the term renews. Defaults to monthly, the most common case, but the
+  /// user picks it explicitly rather than the app leaving it undefined.
+  late Frequency _recurrenceFrequency;
+  late int _recurrenceInterval;
   bool _saving = false;
   String? _dateError;
 
@@ -84,6 +96,9 @@ class _ObligationFormScreenState extends ConsumerState<ObligationFormScreen> {
     _criticality = d?.criticality ?? Criticality.important;
     _direction = d?.direction ?? MoneyDirection.expense;
     _autoRenews = d?.autoRenews ?? false;
+    _currency = d?.value?.currency ?? CurrencyDefaults.forDevice();
+    _recurrenceFrequency = d?.recurrence?.frequency ?? Frequency.monthly;
+    _recurrenceInterval = d?.recurrence?.interval ?? 1;
     // Review and edit: show everything up front, there's real data worth
     // seeing. Fresh manual entry stays collapsed — title + date and nothing
     // else is the common case.
@@ -140,7 +155,7 @@ class _ObligationFormScreenState extends ConsumerState<ObligationFormScreen> {
       counterparty:
           _counterparty.text.trim().isEmpty ? null : _counterparty.text.trim(),
       value: amount != null && amount > 0
-          ? Money((amount * 100).round(), source?.value?.currency ?? 'USD')
+          ? Money((amount * 100).round(), _currency)
           : null,
       direction: _direction,
       autoRenews: _autoRenews,
@@ -152,11 +167,20 @@ class _ObligationFormScreenState extends ConsumerState<ObligationFormScreen> {
       status: _isReview
           ? ObligationStatus.dormant
           : (source?.status ?? ObligationStatus.dormant),
-      recurrence: source?.recurrence,
+      // Only meaningful for an auto-renewing obligation — turning the
+      // switch off drops whatever period was picked rather than leaving a
+      // stale rule attached to something that no longer renews.
+      recurrence: _autoRenews
+          ? RecurrenceRule(
+              frequency: _recurrenceFrequency,
+              interval: _recurrenceInterval,
+            )
+          : null,
       assigneeId: source?.assigneeId,
       notes: source?.notes,
       attachmentIds: source?.attachmentIds ?? const [],
       createdVia: source?.createdVia ?? CaptureSource.manual,
+      snoozedUntil: source?.snoozedUntil,
     );
 
     await ref.read(obligationRepositoryProvider).upsert(obligation);
@@ -253,7 +277,7 @@ class _ObligationFormScreenState extends ConsumerState<ObligationFormScreen> {
                     controller: _amount,
                     keyboardType:
                         const TextInputType.numberWithOptions(decimal: true),
-                    decoration: const InputDecoration(labelText: 'Value (USD)'),
+                    decoration: InputDecoration(labelText: 'Value ($_currency)'),
                   ),
                   const SizedBox(height: Space.md),
                   SegmentedButton<MoneyDirection>(
@@ -278,6 +302,18 @@ class _ObligationFormScreenState extends ConsumerState<ObligationFormScreen> {
                     value: _autoRenews,
                     onChanged: (v) => setState(() => _autoRenews = v),
                   ),
+                  if (_autoRenews) ...[
+                    const SizedBox(height: Space.sm),
+                    _RecurrencePicker(
+                      frequency: _recurrenceFrequency,
+                      interval: _recurrenceInterval,
+                      onFrequencyChanged: (f) =>
+                          setState(() => _recurrenceFrequency = f),
+                      onIntervalChanged: (i) =>
+                          setState(() => _recurrenceInterval = i),
+                      previewAnchor: _expiryDate,
+                    ),
+                  ],
                   const SizedBox(height: Space.md),
                   SegmentedButton<Criticality>(
                     segments: const [
@@ -337,6 +373,163 @@ class _DisclosureBanner extends StatelessWidget {
           Icon(CupertinoIcons.lock, size: 16, color: tone.inkMuted),
           const SizedBox(width: Space.sm),
           Expanded(child: Text(text, style: Type.label(tone.inkMuted))),
+        ],
+      ),
+    );
+  }
+}
+
+/// Frequency + interval for an auto-renewing obligation, plus a live preview
+/// of when the next renewal actually lands — e.g. "monthly" against an
+/// expiry of 4 Aug reads as "next renewal: 4 Sep" here, not left implicit.
+class _RecurrencePicker extends StatelessWidget {
+  const _RecurrencePicker({
+    required this.frequency,
+    required this.interval,
+    required this.onFrequencyChanged,
+    required this.onIntervalChanged,
+    required this.previewAnchor,
+  });
+
+  final Frequency frequency;
+  final int interval;
+  final ValueChanged<Frequency> onFrequencyChanged;
+  final ValueChanged<int> onIntervalChanged;
+
+  /// The obligation's expiry date, if picked yet — the preview has nothing
+  /// to anchor to until it is.
+  final DateTime? previewAnchor;
+
+  static const _options = [
+    Frequency.weekly,
+    Frequency.monthly,
+    Frequency.quarterly,
+    Frequency.annual,
+    Frequency.custom,
+  ];
+
+  static String _label(Frequency f) => switch (f) {
+        Frequency.weekly => 'Weekly',
+        Frequency.monthly => 'Monthly',
+        Frequency.quarterly => 'Quarterly',
+        Frequency.annual => 'Annually',
+        Frequency.custom => 'Custom (days)',
+        Frequency.daily => 'Daily',
+        Frequency.none => 'None',
+      };
+
+  /// What the interval stepper counts in, e.g. "Every 2 [weeks]".
+  static String _unit(Frequency f, int interval) {
+    final plural = interval != 1;
+    return switch (f) {
+      Frequency.weekly => plural ? 'weeks' : 'week',
+      Frequency.monthly => plural ? 'months' : 'month',
+      Frequency.quarterly => plural ? 'quarters' : 'quarter',
+      Frequency.annual => plural ? 'years' : 'year',
+      Frequency.custom => plural ? 'days' : 'day',
+      Frequency.daily => plural ? 'days' : 'day',
+      Frequency.none => '',
+    };
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final tone = context.tone;
+    final anchor = previewAnchor;
+    final next = anchor == null
+        ? null
+        : RecurrenceEngine.next(
+            anchor,
+            RecurrenceRule(frequency: frequency, interval: interval),
+            anchor,
+          );
+
+    return Container(
+      padding: const EdgeInsets.all(Space.md),
+      decoration: BoxDecoration(
+        color: tone.paper,
+        borderRadius: BorderRadius.circular(Radii.md),
+        border: Border.all(color: tone.hairline),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Renewal period', style: Type.label(tone.inkMuted)),
+          const SizedBox(height: Space.sm),
+          DropdownButtonFormField<Frequency>(
+            initialValue: frequency,
+            decoration: const InputDecoration(labelText: 'Frequency'),
+            items: [
+              for (final f in _options)
+                DropdownMenuItem(value: f, child: Text(_label(f))),
+            ],
+            onChanged: (v) {
+              if (v != null) onFrequencyChanged(v);
+            },
+          ),
+          const SizedBox(height: Space.md),
+          Row(
+            children: [
+              Text('Every', style: Type.body(tone.ink)),
+              const SizedBox(width: Space.sm),
+              _Stepper(
+                value: interval,
+                onChanged: onIntervalChanged,
+              ),
+              const SizedBox(width: Space.sm),
+              Text(_unit(frequency, interval), style: Type.body(tone.ink)),
+            ],
+          ),
+          if (next != null) ...[
+            const SizedBox(height: Space.sm),
+            Text(
+              'Next renewal: ${DateFormat.yMMMd().format(next)}',
+              style: Type.label(tone.inkMuted),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _Stepper extends StatelessWidget {
+  const _Stepper({required this.value, required this.onChanged});
+  final int value;
+  final ValueChanged<int> onChanged;
+
+  static const _min = 1;
+  static const _max = 30;
+
+  @override
+  Widget build(BuildContext context) {
+    final tone = context.tone;
+    return Container(
+      decoration: BoxDecoration(
+        border: Border.all(color: tone.hairline),
+        borderRadius: BorderRadius.circular(Radii.sm),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          IconButton(
+            icon: const Icon(CupertinoIcons.minus, size: 16),
+            onPressed: value > _min ? () => onChanged(value - 1) : null,
+            visualDensity: VisualDensity.compact,
+          ),
+          SizedBox(
+            width: 24,
+            child: Text(
+              '$value',
+              textAlign: TextAlign.center,
+              style: Type.body(tone.ink),
+            ),
+          ),
+          IconButton(
+            icon: const Icon(CupertinoIcons.plus, size: 16),
+            onPressed: value < _max ? () => onChanged(value + 1) : null,
+            visualDensity: VisualDensity.compact,
+          ),
         ],
       ),
     );

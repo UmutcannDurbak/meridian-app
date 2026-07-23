@@ -3,6 +3,7 @@ import 'package:flutter/semantics.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 
+import '../../core/l10n/app_strings.dart';
 import '../../core/theme/theme.dart';
 import '../../core/theme/tokens.dart';
 import '../../domain/entities/obligation.dart';
@@ -37,6 +38,7 @@ class ObligationRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tone = context.tone;
+    final s = AppStrings.of(context);
     final o = obligation;
     final days = o.daysUntilAction(now);
     final pressure = o.pressureAt(now);
@@ -49,7 +51,7 @@ class ObligationRow extends StatelessWidget {
           context,
           Alignment.centerLeft,
           CupertinoIcons.checkmark_alt,
-          'Resolve',
+          s.actionResolve,
           filled: true,
         ),
       ),
@@ -59,7 +61,7 @@ class ObligationRow extends StatelessWidget {
           context,
           Alignment.centerRight,
           CupertinoIcons.clock,
-          'Snooze',
+          s.actionSnooze,
           filled: false,
         ),
       ),
@@ -81,15 +83,15 @@ class ObligationRow extends StatelessWidget {
       // make deleting less safe for a screen-reader user, not more
       // accessible.
       child: Semantics(
-        label: _semanticLabel(),
+        label: _semanticLabel(s),
         button: true,
         onTap: onTap,
         onLongPress: _openActionSheet(context),
         customSemanticsActions: {
           if (onResolve case final resolve?)
-            const CustomSemanticsAction(label: 'Resolve'): resolve,
+            CustomSemanticsAction(label: s.actionResolve): resolve,
           if (onSnooze case final snooze?)
-            const CustomSemanticsAction(label: 'Snooze 7 days'): snooze,
+            CustomSemanticsAction(label: s.actionSnooze7): snooze,
         },
         excludeSemantics: true,
         child: Pressable(
@@ -149,7 +151,7 @@ class ObligationRow extends StatelessWidget {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
-                        Text(_dayLabel(days), style: Type.numeric(tone.ink)),
+                        Text(s.dayLabel(days), style: Type.numeric(tone.ink)),
                         const SizedBox(height: Space.xxs),
                         Text(
                           DateFormat.MMMd().format(o.actionDeadline),
@@ -164,7 +166,7 @@ class ObligationRow extends StatelessWidget {
                   pressure: pressure,
                   windowStartFraction: o.noticeDays > 0 ? 0.35 : 0.0,
                 ),
-                if (o.autoRenews || o.noticeDaysAssumed) ...[
+                if (o.autoRenews || o.noticeDaysAssumed || o.isSnoozed(now)) ...[
                   const SizedBox(height: Space.sm),
                   // Wrap, not Row — two tags fit on one line at normal text
                   // size but not at a larger accessibility size, and this
@@ -173,13 +175,19 @@ class ObligationRow extends StatelessWidget {
                     spacing: Space.sm,
                     runSpacing: Space.xs,
                     children: [
-                      if (o.autoRenews)
-                        _tag(context, 'Renews unless cancelled'),
+                      if (o.autoRenews) _tag(context, _renewalTag(o, s)),
                       if (o.noticeDaysAssumed)
                         // Surfaced deliberately: an assumed notice period
                         // that is wrong is the one way this product can
                         // actively mislead.
-                        _tag(context, 'Notice period assumed'),
+                        _tag(context, s.tagNoticeAssumed),
+                      if (o.isSnoozed(now))
+                        _tag(
+                          context,
+                          s.snoozedUntil(
+                            DateFormat.MMMd().format(o.snoozedUntil!),
+                          ),
+                        ),
                     ],
                   ),
                 ],
@@ -206,17 +214,36 @@ class ObligationRow extends StatelessWidget {
         ObligationCategory.other => CupertinoIcons.ellipsis_circle,
       };
 
-  static String _dayLabel(int days) {
-    if (days < 0) return '${-days}d over';
-    if (days == 0) return 'Today';
-    return '${days}d';
+  /// "Renews unless cancelled" on its own doesn't answer the question users
+  /// actually have — renews *when*? If a period was picked, say it.
+  ///
+  /// The generic fallback is localized via [AppStrings.tagAutoRenews]; the
+  /// specific period phrasing ("monthly", "every 2 weeks") is not yet — see
+  /// AppStrings' doc comment for the screens this pass covers.
+  static String _renewalTag(Obligation o, AppStrings s) {
+    final rule = o.recurrence;
+    if (rule == null) return s.tagAutoRenews;
+    final period = switch (rule.frequency) {
+      Frequency.weekly =>
+        rule.interval == 1 ? 'weekly' : 'every ${rule.interval} weeks',
+      Frequency.monthly =>
+        rule.interval == 1 ? 'monthly' : 'every ${rule.interval} months',
+      Frequency.quarterly =>
+        rule.interval == 1 ? 'quarterly' : 'every ${rule.interval} quarters',
+      Frequency.annual =>
+        rule.interval == 1 ? 'annually' : 'every ${rule.interval} years',
+      Frequency.custom => 'every ${rule.interval} days',
+      Frequency.daily => 'daily',
+      Frequency.none => null,
+    };
+    return period == null ? s.tagAutoRenews : 'Renews $period unless cancelled';
   }
 
   /// One coherent sentence a screen reader announces for the whole row,
   /// standing in for the several separate Text widgets excludeSemantics
   /// hides — otherwise a screen reader would read the title, counterparty,
   /// day label, and exact date as four disconnected fragments.
-  String _semanticLabel() {
+  String _semanticLabel(AppStrings s) {
     final o = obligation;
     final days = o.daysUntilAction(now);
     final urgency = days < 0
@@ -229,8 +256,8 @@ class ObligationRow extends StatelessWidget {
       if (o.counterparty != null) o.counterparty!,
       urgency,
       o.category.label,
-      if (o.autoRenews) 'renews automatically unless cancelled',
-      if (o.noticeDaysAssumed) 'notice period assumed, may be inaccurate',
+      if (o.autoRenews) _renewalTag(o, s),
+      if (o.noticeDaysAssumed) s.tagNoticeAssumed,
     ];
     return parts.join('. ');
   }

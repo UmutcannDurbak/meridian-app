@@ -101,6 +101,7 @@ class Obligation {
     this.notes,
     this.attachmentIds = const [],
     this.createdVia = CaptureSource.manual,
+    this.snoozedUntil,
   });
 
   final String id;
@@ -135,6 +136,18 @@ class Obligation {
   final String? notes;
   final List<String> attachmentIds;
   final CaptureSource createdVia;
+
+  /// Set by [ObligationRepositoryBase.snooze]. While `now` is before this,
+  /// the obligation is muted: excluded from Horizon and from alerts.
+  ///
+  /// Deliberately separate from [expiryDate]/[actionDeadline] — those are
+  /// the ground truth for when the thing itself is due, and a "remind me
+  /// later" tap must never silently rewrite them. Snoozing defers when the
+  /// user is bothered about it again, not what the deadline actually is.
+  final DateTime? snoozedUntil;
+
+  bool isSnoozed(DateTime now) =>
+      snoozedUntil != null && now.isBefore(snoozedUntil!);
 
   /// The date the user must act by. Derived, indexed, and the primary sort
   /// key across the entire application.
@@ -200,6 +213,7 @@ class Obligation {
     String? assigneeId,
     String? notes,
     List<String>? attachmentIds,
+    DateTime? snoozedUntil,
   }) =>
       Obligation(
         id: id,
@@ -219,6 +233,7 @@ class Obligation {
         notes: notes ?? this.notes,
         attachmentIds: attachmentIds ?? this.attachmentIds,
         createdVia: createdVia,
+        snoozedUntil: snoozedUntil ?? this.snoozedUntil,
       );
 }
 

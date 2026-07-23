@@ -17,7 +17,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting() : super(NativeDatabase.memory());
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -29,6 +29,12 @@ class AppDatabase extends _$AppDatabase {
           // before this column existed was ever entered under.
           if (from < 2) {
             await m.addColumn(obligationRows, obligationRows.direction);
+          }
+          // v2 -> v3: snoozedUntil added so "Snooze" mutes an obligation
+          // without touching its real expiryDate. Existing rows default to
+          // null — nothing was snoozed before this column existed.
+          if (from < 3) {
+            await m.addColumn(obligationRows, obligationRows.snoozedUntil);
           }
         },
       );
