@@ -6,6 +6,14 @@
          legal. Deliberately not requesting SCHEDULE_EXACT_ALARM — see
          notification_channel_io.dart on why these are scheduled inexactly. -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+    <!-- Scan capture (DocumentExtraction.kt) — image_picker_android declares
+         this transitively too, but it's declared explicitly here rather than
+         relying on a manifest merge from a dependency, since it's a real
+         capability this app uses, not incidental to one. required="false"
+         because a device with no camera should still be able to use the
+         app via "Choose from library" / manual entry. -->
+    <uses-permission android:name="android.permission.CAMERA"/>
+    <uses-feature android:name="android.hardware.camera" android:required="false"/>
     <application
         android:label="meridian"
         android:name="${applicationName}"
@@ -47,6 +55,13 @@
         <intent>
             <action android:name="android.intent.action.PROCESS_TEXT"/>
             <data android:mimeType="text/plain"/>
+        </intent>
+        <!-- Package-visibility (Android 11+, API 30+): without this,
+             PackageManager can't see any camera app to resolve
+             ACTION_IMAGE_CAPTURE against, and image_picker's "Take photo"
+             silently fails to find one on some devices/OEM skins. -->
+        <intent>
+            <action android:name="android.media.action.IMAGE_CAPTURE"/>
         </intent>
     </queries>
 </manifest>

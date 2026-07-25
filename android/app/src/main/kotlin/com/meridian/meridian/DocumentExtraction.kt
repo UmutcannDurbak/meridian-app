@@ -28,9 +28,34 @@ class DocumentExtraction : MethodChannel.MethodCallHandler {
 
     companion object {
         const val CHANNEL_NAME = "app.meridian/extraction"
+        private const val MAX_DIMENSION = 2400
 
         fun register(messenger: BinaryMessenger) {
             MethodChannel(messenger, CHANNEL_NAME).setMethodCallHandler(DocumentExtraction())
+        }
+
+        /**
+         * Reads only the image's dimensions first (inJustDecodeBounds), picks
+         * the smallest power-of-two [BitmapFactory.Options.inSampleSize] that
+         * keeps both sides under [maxDimension], then decodes at that size.
+         * ML Kit's text recognizer needs enough resolution to read text, not
+         * the sensor's full output — decoding full-size here is pure memory
+         * risk with no accuracy benefit.
+         */
+        private fun decodeSampledBitmap(path: String, maxDimension: Int): android.graphics.Bitmap? {
+            val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+            BitmapFactory.decodeFile(path, bounds)
+            if (bounds.outWidth <= 0 || bounds.outHeight <= 0) return null
+
+            var sample = 1
+            while (bounds.outWidth / (sample * 2) >= maxDimension ||
+                bounds.outHeight / (sample * 2) >= maxDimension
+            ) {
+                sample *= 2
+            }
+
+            val opts = BitmapFactory.Options().apply { inSampleSize = sample }
+            return BitmapFactory.decodeFile(path, opts)
         }
     }
 
@@ -55,7 +80,16 @@ class DocumentExtraction : MethodChannel.MethodCallHandler {
 
     private fun extract(path: String, result: MethodChannel.Result) {
         val bitmap = try {
-            BitmapFactory.decodeFile(path)
+            decodeSampledBitmap(path, MAX_DIMENSION)
+        } catch (e: OutOfMemoryError) {
+            // A full-resolution camera photo (4000x3000+) decoded without
+            // downsampling can exhaust the app heap on real hardware — an
+            // emulator or a small test image won't reproduce this. Caught
+            // as Throwable-adjacent deliberately: OutOfMemoryError is an
+            // Error, not an Exception, so a plain `catch (e: Exception)`
+            // here would let it crash the whole app instead of surfacing
+            // as a normal "couldn't read that document" result.
+            null
         } catch (e: Exception) {
             null
         }

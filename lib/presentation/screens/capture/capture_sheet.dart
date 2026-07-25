@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
+import '../../../core/l10n/app_strings.dart';
 import '../../../core/theme/theme.dart';
 import '../../../core/theme/tokens.dart';
 import '../../widgets/pressable.dart';
@@ -25,6 +26,7 @@ class _CaptureSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tone = context.tone;
+    final s = AppStrings.of(context);
     // isScrollControlled lets the sheet size to its content up to full
     // screen height; wrapping in a scroll view is the fallback for the rest
     // — a small device or a landscape keyboard should scroll, never overflow.
@@ -35,12 +37,12 @@ class _CaptureSheet extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Add an obligation', style: Type.title(tone.ink)),
+            Text(s.captureAddTitle, style: Type.title(tone.ink)),
             const SizedBox(height: Space.md),
             _Option(
               icon: CupertinoIcons.pencil,
-              title: 'Enter manually',
-              subtitle: 'Title and date — everything else is optional',
+              title: s.captureManualTitle,
+              subtitle: s.captureManualSubtitle,
               onTap: () {
                 Navigator.of(context).pop();
                 Navigator.of(context).push(
@@ -53,8 +55,8 @@ class _CaptureSheet extends StatelessWidget {
             Divider(color: tone.hairline, height: Space.lg),
             _Option(
               icon: CupertinoIcons.doc_text_viewfinder,
-              title: 'Scan a document',
-              subtitle: 'Read on this device. Nothing is uploaded.',
+              title: s.captureScanTitle,
+              subtitle: s.captureScanSubtitle,
               onTap: () {
                 Navigator.of(context).pop();
                 Navigator.of(context).push(
@@ -67,8 +69,8 @@ class _CaptureSheet extends StatelessWidget {
             Divider(color: tone.hairline, height: Space.lg),
             _Option(
               icon: CupertinoIcons.table,
-              title: 'Import spreadsheet',
-              subtitle: 'Bring in a CSV of contracts or renewals at once',
+              title: s.captureImportTitle,
+              subtitle: s.captureImportSubtitle,
               onTap: () {
                 Navigator.of(context).pop();
                 Navigator.of(context).push(

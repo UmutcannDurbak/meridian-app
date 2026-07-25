@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../application/obligation_providers.dart';
+import '../../../core/l10n/app_strings.dart';
 import '../../../core/theme/theme.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../domain/services/search_service.dart';
@@ -32,6 +33,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   @override
   Widget build(BuildContext context) {
     final tone = context.tone;
+    final s = AppStrings.of(context);
     final all = ref.watch(obligationListProvider).valueOrNull ?? const [];
     final now = ref.watch(nowProvider);
     final repo = ref.watch(obligationRepositoryProvider);
@@ -43,8 +45,8 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
           controller: _controller,
           autofocus: true,
           onChanged: (v) => setState(() => _query = v),
-          decoration: const InputDecoration(
-            hintText: 'Search obligations',
+          decoration: InputDecoration(
+            hintText: s.searchHint,
             border: InputBorder.none,
           ),
           style: Type.body(tone.ink),
@@ -106,7 +108,7 @@ class _Prompt extends StatelessWidget {
             Icon(CupertinoIcons.search, size: 32, color: tone.inkFaint),
             const SizedBox(height: Space.md),
             Text(
-              'Search by title, counterparty, notes, or category.',
+              AppStrings.of(context).searchPrompt,
               style: Type.body(tone.inkMuted),
               textAlign: TextAlign.center,
             ),
@@ -137,7 +139,7 @@ class _NoResults extends StatelessWidget {
             ),
             const SizedBox(height: Space.md),
             Text(
-              'Nothing matches "$query".',
+              AppStrings.of(context).searchNoResults(query),
               style: Type.body(tone.inkMuted),
               textAlign: TextAlign.center,
             ),

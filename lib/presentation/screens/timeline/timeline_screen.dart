@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../../application/obligation_providers.dart';
+import '../../../core/l10n/app_strings.dart';
 import '../../../core/theme/theme.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../domain/entities/obligation.dart';
@@ -41,6 +42,7 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
   @override
   Widget build(BuildContext context) {
     final tone = context.tone;
+    final s = AppStrings.of(context);
     final months = ref.watch(timelineMonthsProvider);
     final stats = ref.watch(obligationStatsProvider);
     final now = ref.watch(nowProvider);
@@ -64,7 +66,7 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
         Space.huge,
       ),
       children: [
-        Text('Timeline', style: Type.display(tone.ink)),
+        Text(s.timelineTitle, style: Type.display(tone.ink)),
         const SizedBox(height: Space.md),
         _StatsHeader(stats: stats),
         const SizedBox(height: Space.lg),
@@ -106,7 +108,7 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
         if (displayedItems.isEmpty)
           Padding(
             padding: const EdgeInsets.symmetric(vertical: Space.sm),
-            child: Text('Nothing due', style: Type.label(tone.inkFaint)),
+            child: Text(s.nothingDue, style: Type.label(tone.inkFaint)),
           )
         else
           for (final o in displayedItems)
@@ -139,13 +141,14 @@ class _StatsHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final s = AppStrings.of(context);
     return Column(
       children: [
         Row(
           children: [
             Expanded(
               child: _StatCard(
-                label: 'THIS WEEK',
+                label: s.statThisWeek,
                 count: stats.thisWeekCount,
                 critical: stats.thisWeekCritical,
               ),
@@ -153,7 +156,7 @@ class _StatsHeader extends StatelessWidget {
             const SizedBox(width: Space.sm),
             Expanded(
               child: _StatCard(
-                label: 'THIS MONTH',
+                label: s.statThisMonth,
                 count: stats.thisMonthCount,
                 critical: stats.thisMonthCritical,
               ),
@@ -181,6 +184,7 @@ class _StatCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tone = context.tone;
+    final s = AppStrings.of(context);
     return Container(
       padding: const EdgeInsets.all(Space.md),
       decoration: BoxDecoration(
@@ -196,7 +200,7 @@ class _StatCard extends StatelessWidget {
           Text('$count', style: Type.display(tone.ink).copyWith(fontSize: 26)),
           const SizedBox(height: Space.xxs),
           Text(
-            critical == 0 ? 'nothing critical' : '$critical critical',
+            critical == 0 ? s.statNothingCritical : s.statNCritical(critical),
             style: Type.label(critical == 0 ? tone.inkFaint : Pressure.closing),
           ),
         ],
@@ -214,6 +218,7 @@ class _NetCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tone = context.tone;
+    final s = AppStrings.of(context);
     final entries = netByCurrency.entries.toList()
       ..sort((a, b) => a.key.compareTo(b.key));
 
@@ -228,11 +233,11 @@ class _NetCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('NET THIS MONTH', style: Type.eyebrow(tone.inkMuted)),
+          Text(s.netThisMonth, style: Type.eyebrow(tone.inkMuted)),
           const SizedBox(height: Space.xs),
           if (entries.isEmpty)
             Text(
-              'Nothing valued this month',
+              s.netNothingValued,
               style: Type.label(tone.inkFaint),
             )
           else
@@ -247,7 +252,7 @@ class _NetCard extends StatelessWidget {
               ),
           const SizedBox(height: Space.xxs),
           Text(
-            'income minus what you owe, valued obligations only',
+            s.netCaption,
             style: Type.label(tone.inkFaint),
           ),
         ],

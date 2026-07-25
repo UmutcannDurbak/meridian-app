@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../../application/obligation_providers.dart';
+import '../../../core/l10n/app_strings.dart';
 import '../../../core/theme/theme.dart';
 import '../../../core/theme/tokens.dart';
 
@@ -42,7 +43,7 @@ class ExposureScreen extends ConsumerWidget {
         Space.huge,
       ),
       children: [
-        Text('Exposure', style: Type.display(tone.ink)),
+        Text(AppStrings.of(context).exposureTitle, style: Type.display(tone.ink)),
         const SizedBox(height: Space.lg),
         for (final currency in sortedCurrencies) ...[
           _TotalFigure(
@@ -76,6 +77,7 @@ class _TotalFigure extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tone = context.tone;
+    final s = AppStrings.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -85,14 +87,13 @@ class _TotalFigure extends StatelessWidget {
         ),
         const SizedBox(height: Space.xxs),
         Text(
-          'committed over the next 12 months',
+          s.exposureCommitted12mo,
           style: Type.label(tone.inkMuted),
         ),
         if (thisMonthMinorUnits != null && thisMonthMinorUnits! > 0) ...[
           const SizedBox(height: Space.sm),
           Text(
-            '${_formatMoney(thisMonthMinorUnits!, currency)} enters its '
-            'action window this month',
+            s.exposureEntersWindow(_formatMoney(thisMonthMinorUnits!, currency)),
             style: Type.label(tone.ink),
           ),
         ],
@@ -208,6 +209,7 @@ class _Empty extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tone = context.tone;
+    final s = AppStrings.of(context);
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(Space.xl),
@@ -231,14 +233,13 @@ class _Empty extends StatelessWidget {
             ),
             const SizedBox(height: Space.lg),
             Text(
-              'Nothing with a value on the horizon.',
+              s.exposureEmptyTitle,
               style: Type.title(tone.ink),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: Space.sm),
             Text(
-              'Add a value to an obligation and it will show up here as '
-              'committed spend, forecast by month.',
+              s.exposureEmptyBody,
               style: Type.body(tone.inkMuted),
               textAlign: TextAlign.center,
             ),

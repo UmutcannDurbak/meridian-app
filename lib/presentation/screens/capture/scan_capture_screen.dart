@@ -5,6 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../application/obligation_providers.dart';
+import '../../../core/l10n/app_strings.dart';
 import '../../../core/theme/theme.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../data/local/extraction_channel.dart';
@@ -38,6 +39,15 @@ class _ScanCaptureScreenState extends ConsumerState<ScanCaptureScreen> {
       final file = await ImagePicker().pickImage(
         source: source,
         imageQuality: 90,
+        // A modern phone camera photo is easily 4000x3000+ pixels.
+        // Decoding that at full resolution on the native side (see
+        // DocumentExtraction.kt) risks an OutOfMemoryError on real hardware
+        // — an emulator or a downsized gallery test image won't reproduce
+        // it, which is exactly the kind of gap between "works on my dev
+        // loop" and "fails on device". Capping here means the file written
+        // to disk is already a size OCR doesn't need more than anyway.
+        maxWidth: 2400,
+        maxHeight: 2400,
       );
       if (file == null) {
         if (mounted) setState(() => _working = false);
@@ -50,13 +60,12 @@ class _ScanCaptureScreenState extends ConsumerState<ScanCaptureScreen> {
       if (!mounted) return;
 
       if (result == null) {
+        final s = AppStrings.of(context);
         setState(() {
           _working = false;
           _error = capabilities.ocr
-              ? 'Could not read that document. Try a clearer photo, or add '
-                  'it manually.'
-              : 'On-device extraction is not available on this device. You '
-                  'can still add it manually.';
+              ? s.scanErrorUnreadable
+              : s.scanErrorUnavailable;
         });
         return;
       }
@@ -83,7 +92,7 @@ class _ScanCaptureScreenState extends ConsumerState<ScanCaptureScreen> {
       if (!mounted) return;
       setState(() {
         _working = false;
-        _error = 'Something went wrong reading that document.';
+        _error = AppStrings.of(context).scanErrorGeneric;
       });
     }
   }
@@ -91,8 +100,9 @@ class _ScanCaptureScreenState extends ConsumerState<ScanCaptureScreen> {
   @override
   Widget build(BuildContext context) {
     final tone = context.tone;
+    final s = AppStrings.of(context);
     return Scaffold(
-      appBar: AppBar(title: const Text('Scan a document')),
+      appBar: AppBar(title: Text(s.captureScanTitle)),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(Space.lg),
@@ -106,7 +116,7 @@ class _ScanCaptureScreenState extends ConsumerState<ScanCaptureScreen> {
               ),
               const SizedBox(height: Space.lg),
               Text(
-                'Photograph a contract, invoice, or renewal notice.',
+                s.scanPrompt,
                 style: Type.body(tone.inkMuted),
                 textAlign: TextAlign.center,
               ),
@@ -123,7 +133,7 @@ class _ScanCaptureScreenState extends ConsumerState<ScanCaptureScreen> {
                 onPressed:
                     _working ? null : () => _pickAndExtract(ImageSource.camera),
                 icon: const Icon(CupertinoIcons.camera),
-                label: Text(_working ? 'Reading…' : 'Take photo'),
+                label: Text(_working ? s.scanReading : s.scanTakePhoto),
               ),
               const SizedBox(height: Space.sm),
               OutlinedButton.icon(
@@ -131,7 +141,7 @@ class _ScanCaptureScreenState extends ConsumerState<ScanCaptureScreen> {
                     ? null
                     : () => _pickAndExtract(ImageSource.gallery),
                 icon: const Icon(CupertinoIcons.photo_on_rectangle),
-                label: const Text('Choose from library'),
+                label: Text(s.scanChooseLibrary),
               ),
             ],
           ),

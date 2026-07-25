@@ -255,7 +255,7 @@ class ObligationRow extends StatelessWidget {
       o.title,
       if (o.counterparty != null) o.counterparty!,
       urgency,
-      o.category.label,
+      s.categoryLabel(o.category.name),
       if (o.autoRenews) _renewalTag(o, s),
       if (o.noticeDaysAssumed) s.tagNoticeAssumed,
     ];

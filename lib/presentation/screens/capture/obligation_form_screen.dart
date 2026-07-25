@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../application/obligation_providers.dart';
+import '../../../core/l10n/app_strings.dart';
 import '../../../core/locale/currency_defaults.dart';
 import '../../../core/theme/theme.dart';
 import '../../../core/theme/tokens.dart';
@@ -133,7 +134,7 @@ class _ObligationFormScreenState extends ConsumerState<ObligationFormScreen> {
   Future<void> _submit() async {
     final formOk = _formKey.currentState?.validate() ?? false;
     if (_expiryDate == null) {
-      setState(() => _dateError = 'Required');
+      setState(() => _dateError = AppStrings.of(context).formRequired);
     }
     if (!formOk || _expiryDate == null) return;
 
@@ -193,12 +194,13 @@ class _ObligationFormScreenState extends ConsumerState<ObligationFormScreen> {
   @override
   Widget build(BuildContext context) {
     final tone = context.tone;
+    final strings = AppStrings.of(context);
     return Scaffold(
       appBar: AppBar(
         title: Text(
           _isReview
-              ? 'Review draft'
-              : (_isEdit ? 'Edit obligation' : 'New obligation'),
+              ? strings.formReviewDraft
+              : (_isEdit ? strings.formEditObligation : strings.formNewObligation),
         ),
       ),
       body: SafeArea(
@@ -214,9 +216,9 @@ class _ObligationFormScreenState extends ConsumerState<ObligationFormScreen> {
               TextFormField(
                 controller: _title,
                 autofocus: !_isReview && !_isEdit,
-                decoration: const InputDecoration(labelText: 'Title'),
+                decoration: InputDecoration(labelText: strings.formTitleField),
                 validator: (v) =>
-                    (v == null || v.trim().isEmpty) ? 'Required' : null,
+                    (v == null || v.trim().isEmpty) ? strings.formRequired : null,
                 textInputAction: TextInputAction.next,
               ),
               const SizedBox(height: Space.md),
@@ -224,7 +226,7 @@ class _ObligationFormScreenState extends ConsumerState<ObligationFormScreen> {
                 onTap: _pickDate,
                 child: InputDecorator(
                   decoration: InputDecoration(
-                    labelText: 'Expiry date',
+                    labelText: strings.formExpiryDate,
                     errorText: _dateError,
                     suffixIcon: Icon(
                       CupertinoIcons.calendar,
@@ -234,7 +236,7 @@ class _ObligationFormScreenState extends ConsumerState<ObligationFormScreen> {
                   ),
                   child: Text(
                     _expiryDate == null
-                        ? 'Select a date'
+                        ? strings.formSelectDate
                         : DateFormat.yMMMd().format(_expiryDate!),
                     style: Type.body(
                       _expiryDate == null ? tone.inkFaint : tone.ink,
@@ -250,10 +252,13 @@ class _ObligationFormScreenState extends ConsumerState<ObligationFormScreen> {
                 children: [
                   DropdownButtonFormField<ObligationCategory>(
                     initialValue: _category,
-                    decoration: const InputDecoration(labelText: 'Category'),
+                    decoration: InputDecoration(labelText: strings.formCategory),
                     items: [
                       for (final c in ObligationCategory.values)
-                        DropdownMenuItem(value: c, child: Text(c.label)),
+                        DropdownMenuItem(
+                          value: c,
+                          child: Text(strings.categoryLabel(c.name)),
+                        ),
                     ],
                     onChanged: (v) =>
                         setState(() => _category = v ?? _category),
@@ -262,14 +267,14 @@ class _ObligationFormScreenState extends ConsumerState<ObligationFormScreen> {
                   TextFormField(
                     controller: _counterparty,
                     decoration:
-                        const InputDecoration(labelText: 'Counterparty'),
+                        InputDecoration(labelText: strings.formCounterparty),
                   ),
                   const SizedBox(height: Space.md),
                   TextFormField(
                     controller: _noticeDays,
                     keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(
-                      labelText: 'Notice period (days)',
+                    decoration: InputDecoration(
+                      labelText: strings.formNoticeDays,
                     ),
                   ),
                   const SizedBox(height: Space.md),
@@ -277,28 +282,28 @@ class _ObligationFormScreenState extends ConsumerState<ObligationFormScreen> {
                     controller: _amount,
                     keyboardType:
                         const TextInputType.numberWithOptions(decimal: true),
-                    decoration: InputDecoration(labelText: 'Value ($_currency)'),
+                    decoration: InputDecoration(labelText: strings.formValue(_currency)),
                   ),
                   const SizedBox(height: Space.md),
                   SegmentedButton<MoneyDirection>(
-                    segments: const [
+                    segments: [
                       ButtonSegment(
                         value: MoneyDirection.expense,
-                        label: Text('You pay'),
+                        label: Text(strings.formYouPay),
                       ),
                       ButtonSegment(
                         value: MoneyDirection.income,
-                        label: Text('You receive'),
+                        label: Text(strings.formYouReceive),
                       ),
                     ],
                     selected: {_direction},
-                    onSelectionChanged: (s) =>
-                        setState(() => _direction = s.first),
+                    onSelectionChanged: (sel) =>
+                        setState(() => _direction = sel.first),
                   ),
                   const SizedBox(height: Space.md),
                   SwitchListTile.adaptive(
                     contentPadding: EdgeInsets.zero,
-                    title: const Text('Renews automatically'),
+                    title: Text(strings.formRenewsAutomatically),
                     value: _autoRenews,
                     onChanged: (v) => setState(() => _autoRenews = v),
                   ),
@@ -316,23 +321,23 @@ class _ObligationFormScreenState extends ConsumerState<ObligationFormScreen> {
                   ],
                   const SizedBox(height: Space.md),
                   SegmentedButton<Criticality>(
-                    segments: const [
+                    segments: [
                       ButtonSegment(
                         value: Criticality.routine,
-                        label: Text('Routine'),
+                        label: Text(strings.formRoutine),
                       ),
                       ButtonSegment(
                         value: Criticality.important,
-                        label: Text('Important'),
+                        label: Text(strings.formImportant),
                       ),
                       ButtonSegment(
                         value: Criticality.critical,
-                        label: Text('Critical'),
+                        label: Text(strings.formCritical),
                       ),
                     ],
                     selected: {_criticality},
-                    onSelectionChanged: (s) =>
-                        setState(() => _criticality = s.first),
+                    onSelectionChanged: (sel) =>
+                        setState(() => _criticality = sel.first),
                   ),
                 ],
               ),
@@ -340,7 +345,9 @@ class _ObligationFormScreenState extends ConsumerState<ObligationFormScreen> {
               FilledButton(
                 onPressed: _saving ? null : _submit,
                 child: Text(
-                  _saving ? 'Saving…' : (_isReview ? 'Confirm' : 'Save'),
+                  _saving
+                      ? strings.formSaving
+                      : (_isReview ? strings.formConfirmButton : strings.formSaveButton),
                 ),
               ),
               const SizedBox(height: Space.xxl),
@@ -408,33 +415,10 @@ class _RecurrencePicker extends StatelessWidget {
     Frequency.custom,
   ];
 
-  static String _label(Frequency f) => switch (f) {
-        Frequency.weekly => 'Weekly',
-        Frequency.monthly => 'Monthly',
-        Frequency.quarterly => 'Quarterly',
-        Frequency.annual => 'Annually',
-        Frequency.custom => 'Custom (days)',
-        Frequency.daily => 'Daily',
-        Frequency.none => 'None',
-      };
-
-  /// What the interval stepper counts in, e.g. "Every 2 [weeks]".
-  static String _unit(Frequency f, int interval) {
-    final plural = interval != 1;
-    return switch (f) {
-      Frequency.weekly => plural ? 'weeks' : 'week',
-      Frequency.monthly => plural ? 'months' : 'month',
-      Frequency.quarterly => plural ? 'quarters' : 'quarter',
-      Frequency.annual => plural ? 'years' : 'year',
-      Frequency.custom => plural ? 'days' : 'day',
-      Frequency.daily => plural ? 'days' : 'day',
-      Frequency.none => '',
-    };
-  }
-
   @override
   Widget build(BuildContext context) {
     final tone = context.tone;
+    final strings = AppStrings.of(context);
     final anchor = previewAnchor;
     final next = anchor == null
         ? null
@@ -454,14 +438,18 @@ class _RecurrencePicker extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Renewal period', style: Type.label(tone.inkMuted)),
+          Text(strings.recurrenceTitle, style: Type.label(tone.inkMuted)),
           const SizedBox(height: Space.sm),
           DropdownButtonFormField<Frequency>(
             initialValue: frequency,
-            decoration: const InputDecoration(labelText: 'Frequency'),
+            decoration:
+                InputDecoration(labelText: strings.recurrenceFrequencyLabel),
             items: [
               for (final f in _options)
-                DropdownMenuItem(value: f, child: Text(_label(f))),
+                DropdownMenuItem(
+                  value: f,
+                  child: Text(strings.frequencyLabel(f.name)),
+                ),
             ],
             onChanged: (v) {
               if (v != null) onFrequencyChanged(v);
@@ -470,20 +458,23 @@ class _RecurrencePicker extends StatelessWidget {
           const SizedBox(height: Space.md),
           Row(
             children: [
-              Text('Every', style: Type.body(tone.ink)),
+              Text(strings.recurrenceEvery, style: Type.body(tone.ink)),
               const SizedBox(width: Space.sm),
               _Stepper(
                 value: interval,
                 onChanged: onIntervalChanged,
               ),
               const SizedBox(width: Space.sm),
-              Text(_unit(frequency, interval), style: Type.body(tone.ink)),
+              Text(
+                strings.recurrenceUnitLabel(frequency.name, interval),
+                style: Type.body(tone.ink),
+              ),
             ],
           ),
           if (next != null) ...[
             const SizedBox(height: Space.sm),
             Text(
-              'Next renewal: ${DateFormat.yMMMd().format(next)}',
+              strings.recurrenceNextRenewal(DateFormat.yMMMd().format(next)),
               style: Type.label(tone.inkMuted),
             ),
           ],
@@ -559,7 +550,7 @@ class _MoreDetails extends StatelessWidget {
             padding: const EdgeInsets.symmetric(vertical: Space.sm),
             child: Row(
               children: [
-                Text('More details', style: Type.label(tone.inkMuted)),
+                Text(AppStrings.of(context).formMoreDetails, style: Type.label(tone.inkMuted)),
                 const SizedBox(width: Space.xxs),
                 Icon(
                   expanded ? CupertinoIcons.chevron_up : CupertinoIcons.chevron_down,

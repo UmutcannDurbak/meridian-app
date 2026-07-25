@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:local_auth/local_auth.dart';
 
 import '../../application/app_lock_providers.dart';
+import '../../core/l10n/app_strings.dart';
 import '../../core/theme/theme.dart';
 import '../../core/theme/tokens.dart';
 
@@ -144,6 +145,7 @@ class _LockScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tone = context.tone;
+    final s = AppStrings.of(context);
     return Scaffold(
       backgroundColor: tone.paper,
       body: SafeArea(
@@ -169,17 +171,17 @@ class _LockScreen extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: Space.lg),
-                Text('Meridian is locked', style: Type.title(tone.ink)),
+                Text(s.lockScreenTitle, style: Type.title(tone.ink)),
                 const SizedBox(height: Space.sm),
                 Text(
-                  'Your contracts and financial details stay private.',
+                  s.lockScreenBody,
                   style: Type.body(tone.inkMuted),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: Space.xl),
                 FilledButton(
                   onPressed: authenticating ? null : onUnlock,
-                  child: Text(authenticating ? 'Checking…' : 'Unlock'),
+                  child: Text(authenticating ? s.lockScreenChecking : s.lockScreenUnlock),
                 ),
               ],
             ),

@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+import '../../core/l10n/app_strings.dart';
 import '../../core/theme/theme.dart';
 import '../../core/theme/tokens.dart';
 import '../../domain/entities/obligation.dart';
@@ -29,20 +30,10 @@ class MonthCalendar extends StatelessWidget {
   final int? selectedDay;
   final ValueChanged<int> onSelectDay;
 
-  static const _weekdayLabels = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
-  static const _weekdayFullNames = [
-    'Monday',
-    'Tuesday',
-    'Wednesday',
-    'Thursday',
-    'Friday',
-    'Saturday',
-    'Sunday',
-  ];
-
   @override
   Widget build(BuildContext context) {
     final tone = context.tone;
+    final s = AppStrings.of(context);
     final firstOfMonth = DateTime(month.year, month.month, 1);
     final leadingBlanks = firstOfMonth.weekday - 1; // Monday=1 -> 0 blanks
     final daysInMonth = DateTime(month.year, month.month + 1, 0).day;
@@ -52,14 +43,14 @@ class MonthCalendar extends StatelessWidget {
       children: [
         Row(
           children: [
-            for (var i = 0; i < _weekdayLabels.length; i++)
+            for (var i = 0; i < 7; i++)
               Expanded(
                 child: Center(
                   child: Semantics(
-                    label: _weekdayFullNames[i],
+                    label: s.weekdayFull(i),
                     excludeSemantics: true,
                     child: Text(
-                      _weekdayLabels[i],
+                      s.weekdayLetter(i),
                       style: Type.eyebrow(tone.inkMuted),
                     ),
                   ),
@@ -81,6 +72,7 @@ class MonthCalendar extends StatelessWidget {
             if (i < leadingBlanks) return const SizedBox.shrink();
             final day = i - leadingBlanks + 1;
             final items = itemsByDay[day] ?? const [];
+            final date = DateTime(month.year, month.month, day);
             return _DayCell(
               day: day,
               items: items,
@@ -88,27 +80,16 @@ class MonthCalendar extends StatelessWidget {
               isSelected: selectedDay == day,
               now: now,
               onTap: () => onSelectDay(day),
-              semanticLabel: _dayLabel(
-                DateTime(month.year, month.month, day),
+              semanticLabel: s.dayCellLabel(
+                DateFormat.MMMMd().format(date),
+                isCurrentMonth && now.day == day,
                 items.length,
-                isToday: isCurrentMonth && now.day == day,
               ),
             );
           },
         ),
       ],
     );
-  }
-
-  static String _dayLabel(DateTime date, int count, {required bool isToday}) {
-    final formatted = DateFormat.MMMMd().format(date);
-    final today = isToday ? ', today' : '';
-    final due = count == 0
-        ? 'nothing due'
-        : count == 1
-            ? '1 obligation due'
-            : '$count obligations due';
-    return '$formatted$today, $due';
   }
 }
 
@@ -208,19 +189,20 @@ class MonthNav extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tone = context.tone;
+    final s = AppStrings.of(context);
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         _NavArrow(
           icon: CupertinoIcons.chevron_left,
-          label: 'Previous month',
+          label: s.navPreviousMonth,
           enabled: canGoBack,
           onTap: onBack,
         ),
         Text(label, style: Type.heading(tone.ink)),
         _NavArrow(
           icon: CupertinoIcons.chevron_right,
-          label: 'Next month',
+          label: s.navNextMonth,
           enabled: canGoForward,
           onTap: onForward,
         ),

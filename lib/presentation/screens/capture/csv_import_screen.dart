@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../application/obligation_providers.dart';
+import '../../../core/l10n/app_strings.dart';
 import '../../../core/locale/currency_defaults.dart';
 import '../../../core/theme/theme.dart';
 import '../../../core/theme/tokens.dart';
@@ -74,7 +75,7 @@ class _CsvImportScreenState extends ConsumerState<CsvImportScreen> {
       if (bytes == null) {
         setState(() {
           _picking = false;
-          _pickError = 'Could not read that file.';
+          _pickError = AppStrings.of(context).csvErrorRead;
         });
         return;
       }
@@ -85,8 +86,7 @@ class _CsvImportScreenState extends ConsumerState<CsvImportScreen> {
       if (table.length < 2) {
         setState(() {
           _picking = false;
-          _pickError = 'That file needs a header row and at least one row '
-              'of data.';
+          _pickError = AppStrings.of(context).csvErrorHeaderRow;
         });
         return;
       }
@@ -118,7 +118,7 @@ class _CsvImportScreenState extends ConsumerState<CsvImportScreen> {
     } catch (_) {
       setState(() {
         _picking = false;
-        _pickError = 'Something went wrong reading that file.';
+        _pickError = AppStrings.of(context).csvErrorGeneric;
       });
     }
   }
@@ -167,7 +167,7 @@ class _CsvImportScreenState extends ConsumerState<CsvImportScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Import spreadsheet')),
+      appBar: AppBar(title: Text(AppStrings.of(context).captureImportTitle)),
       body: SafeArea(
         child: switch (_step) {
           _Step.pickFile => _PickFileStep(
@@ -247,6 +247,7 @@ class _PickFileStep extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tone = context.tone;
+    final s = AppStrings.of(context);
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(Space.lg),
@@ -256,14 +257,13 @@ class _PickFileStep extends StatelessWidget {
             Icon(CupertinoIcons.table, size: 48, color: tone.inkFaint),
             const SizedBox(height: Space.lg),
             Text(
-              'Already keep a spreadsheet of contracts, renewals, or '
-              'deadlines? Import it instead of typing everything by hand.',
+              s.csvPickIntro,
               style: Type.body(tone.inkMuted),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: Space.sm),
             Text(
-              'CSV only for now — export from Excel or Sheets as CSV first.',
+              s.csvPickHint,
               style: Type.label(tone.inkFaint),
               textAlign: TextAlign.center,
             ),
@@ -279,7 +279,7 @@ class _PickFileStep extends StatelessWidget {
             FilledButton.icon(
               onPressed: picking ? null : onPick,
               icon: const Icon(CupertinoIcons.cloud_upload),
-              label: Text(picking ? 'Reading…' : 'Choose a CSV file'),
+              label: Text(picking ? s.csvReading : s.csvChooseFile),
             ),
           ],
         ),
@@ -324,6 +324,7 @@ class _MappingStep extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tone = context.tone;
+    final s = AppStrings.of(context);
     return Column(
       children: [
         Expanded(
@@ -331,19 +332,18 @@ class _MappingStep extends StatelessWidget {
             padding: const EdgeInsets.all(Space.md),
             children: [
               Text(
-                '$fileName — $rowCount row${rowCount == 1 ? '' : 's'}',
+                s.csvFileRowCount(fileName, rowCount),
                 style: Type.label(tone.inkMuted),
               ),
               const SizedBox(height: Space.md),
               Text(
-                'Match each column to a field. Title and date are required '
-                '— everything else is optional.',
+                s.csvMatchColumns,
                 style: Type.body(tone.inkMuted),
               ),
               const SizedBox(height: Space.lg),
               _headerDropdown(
                 context,
-                label: 'Title *',
+                label: s.csvFieldTitle,
                 value: titleHeader,
                 required: true,
                 onChanged: (v) => onChanged(_Field.title, v),
@@ -351,7 +351,7 @@ class _MappingStep extends StatelessWidget {
               const SizedBox(height: Space.md),
               _headerDropdown(
                 context,
-                label: 'Expiry date *',
+                label: s.csvFieldDate,
                 value: dateHeader,
                 required: true,
                 onChanged: (v) => onChanged(_Field.date, v),
@@ -359,42 +359,42 @@ class _MappingStep extends StatelessWidget {
               const SizedBox(height: Space.md),
               _headerDropdown(
                 context,
-                label: 'Category',
+                label: s.csvFieldCategory,
                 value: categoryHeader,
                 onChanged: (v) => onChanged(_Field.category, v),
               ),
               const SizedBox(height: Space.md),
               _headerDropdown(
                 context,
-                label: 'Counterparty',
+                label: s.csvFieldCounterparty,
                 value: counterpartyHeader,
                 onChanged: (v) => onChanged(_Field.counterparty, v),
               ),
               const SizedBox(height: Space.md),
               _headerDropdown(
                 context,
-                label: 'Notice period (days)',
+                label: s.csvFieldNotice,
                 value: noticeDaysHeader,
                 onChanged: (v) => onChanged(_Field.noticeDays, v),
               ),
               const SizedBox(height: Space.md),
               _headerDropdown(
                 context,
-                label: 'Value',
+                label: s.csvFieldValue,
                 value: valueHeader,
                 onChanged: (v) => onChanged(_Field.value, v),
               ),
               const SizedBox(height: Space.md),
               _headerDropdown(
                 context,
-                label: 'Currency',
+                label: s.csvFieldCurrency,
                 value: currencyHeader,
                 onChanged: (v) => onChanged(_Field.currency, v),
               ),
               const SizedBox(height: Space.md),
               _headerDropdown(
                 context,
-                label: 'Renews automatically',
+                label: s.csvFieldAutoRenews,
                 value: autoRenewsHeader,
                 onChanged: (v) => onChanged(_Field.autoRenews, v),
               ),
@@ -407,7 +407,7 @@ class _MappingStep extends StatelessWidget {
             padding: const EdgeInsets.all(Space.md),
             child: FilledButton(
               onPressed: canContinue ? onContinue : null,
-              child: const Text('Preview'),
+              child: Text(s.csvPreviewButton),
             ),
           ),
         ),
@@ -426,7 +426,8 @@ class _MappingStep extends StatelessWidget {
       initialValue: value,
       decoration: InputDecoration(labelText: label),
       items: [
-        if (!required) const DropdownMenuItem(child: Text('— None —')),
+        if (!required)
+          DropdownMenuItem(child: Text(AppStrings.of(context).csvNoneOption)),
         for (final h in headers) DropdownMenuItem(value: h, child: Text(h)),
       ],
       onChanged: onChanged,
@@ -450,6 +451,7 @@ class _PreviewStep extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tone = context.tone;
+    final s = AppStrings.of(context);
     final validCount = rows.where((r) => r.isValid).length;
     final invalidCount = rows.length - validCount;
 
@@ -462,12 +464,12 @@ class _PreviewStep extends StatelessWidget {
               Expanded(
                 child: Text(
                   invalidCount == 0
-                      ? '$validCount ready to import'
-                      : '$validCount ready · $invalidCount need attention',
+                      ? s.csvReadyToImport(validCount)
+                      : s.csvReadyNeedAttention(validCount, invalidCount),
                   style: Type.heading(tone.ink),
                 ),
               ),
-              TextButton(onPressed: onBack, child: const Text('Edit mapping')),
+              TextButton(onPressed: onBack, child: Text(s.csvEditMapping)),
             ],
           ),
         ),
@@ -488,13 +490,14 @@ class _PreviewStep extends StatelessWidget {
                   size: 20,
                 ),
                 title: Text(
-                  r.isValid ? r.obligation!.title : 'Row ${r.rowNumber}',
+                  r.isValid ? r.obligation!.title : s.csvRowLabel(r.rowNumber),
                   style: Type.body(tone.ink),
                 ),
                 subtitle: Text(
                   r.isValid
-                      ? 'Expires '
-                          '${r.obligation!.expiryDate.toIso8601String().split('T').first}'
+                      ? s.csvExpires(
+                          r.obligation!.expiryDate.toIso8601String().split('T').first,
+                        )
                       : r.error!,
                   style: Type.label(
                     r.isValid ? tone.inkMuted : Pressure.closing,
@@ -511,7 +514,7 @@ class _PreviewStep extends StatelessWidget {
             child: FilledButton(
               onPressed: (validCount == 0 || saving) ? null : onConfirm,
               child: Text(
-                saving ? 'Importing…' : 'Import $validCount obligation${validCount == 1 ? '' : 's'}',
+                saving ? s.csvImporting : s.csvImportButton(validCount),
               ),
             ),
           ),
