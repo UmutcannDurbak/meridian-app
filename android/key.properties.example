@@ -1,0 +1,9 @@
+# Copy this file to key.properties (same directory) and fill in real values.
+# key.properties is gitignored — never commit the real one, it contains your
+# keystore password. See ../RELEASE.md for how to generate the keystore
+# these fields point at.
+
+storePassword=CHANGE_ME
+keyPassword=CHANGE_ME
+keyAlias=upload
+storeFile=/absolute/path/to/meridian-upload-keystore.jks
